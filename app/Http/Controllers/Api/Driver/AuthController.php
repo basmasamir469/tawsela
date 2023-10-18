@@ -11,19 +11,14 @@ use App\Http\Requests\drivers\RegisterRequest;
 use App\Http\Requests\drivers\ResetPasswordRequest;
 use App\Mail\VerifyEmail;
 use App\Models\ActivationProcess;
-use App\Models\Provider;
 use App\Models\User;
 use App\Traits\SendSms;
-use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Laravel\Socialite\Facades\Socialite;
-use SendinBlue\Client\Api\TransactionalSMSApi;
-use SendinBlue\Client\Configuration;
 use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
