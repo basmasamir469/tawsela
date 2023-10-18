@@ -12,11 +12,11 @@ class CreateOrdersTable extends Migration {
 		Schema::create('orders', function(Blueprint $table) {
 			$table->increments('id');
 			$table->timestamps();
-			$table->integer('user_id')->unsigned();
+			$table->BigInteger('user_id')->unsigned();
 			$table->integer('promotion_id')->unsigned();
 			$table->decimal('total_cost');
 			$table->decimal('price');
-			$table->integer('driver_id')->unsigned()->nullable();
+			$table->BigInteger('driver_id')->unsigned()->nullable();
 			$table->text('notes')->nullable();
 			$table->text('cancel_reason')->nullable();
 			$table->integer('order_status');

@@ -17,9 +17,9 @@ class CreateDriveInvoicesTable extends Migration {
 			$table->decimal('taxes');
 			$table->decimal('total_cost');
 			$table->decimal('waiting_time');
-			$table->integer('driver_id')->unsigned();
+			$table->BigInteger('driver_id')->unsigned();
 			$table->integer('order_id')->unsigned();
-			$table->integer('user_id')->unsigned();
+			$table->BigInteger('user_id')->unsigned();
 		});
 	}
 

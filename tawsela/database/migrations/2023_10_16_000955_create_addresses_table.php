@@ -15,7 +15,7 @@ class CreateAddressesTable extends Migration {
 			$table->integer('type');
 			$table->text('longitude');
 			$table->text('latitude');
-			$table->integer('user_id')->unsigned();
+			$table->BigInteger('user_id')->unsigned();
 			$table->string('name');
 		});
 	}

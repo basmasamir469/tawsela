@@ -38,6 +38,8 @@ class User extends Authenticatable implements HasMedia
         'remember_token',
     ];
 
+    protected $guard = 'api';
+
     /**
      * The attributes that should be cast.
      *
@@ -76,11 +78,4 @@ class User extends Authenticatable implements HasMedia
     {
         return $this->hasMany('App\Models\Notification');
     }
-
-    public function activationProcesses()
-    {
-        return $this->hasMany('App\Models\ActivationProcess');
-    }
-
-
 }

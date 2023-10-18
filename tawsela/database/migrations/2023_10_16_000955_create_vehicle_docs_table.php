@@ -17,7 +17,7 @@ class CreateVehicleDocsTable extends Migration {
 			$table->integer('car_color')->unsigned();
 			$table->string('metal_plate_numbers');
 			$table->string('model_year');
-			$table->integer('driver_id')->unsigned();
+			$table->BigInteger('driver_id')->unsigned();
 		});
 	}
 

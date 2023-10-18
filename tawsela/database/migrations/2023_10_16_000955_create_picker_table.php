@@ -14,7 +14,7 @@ class CreatePickerTable extends Migration {
 			$table->timestamps();
 			$table->text('latitude');
 			$table->text('longitude');
-			$table->integer('user_id')->unsigned();
+			$table->BigInteger('user_id')->unsigned();
 		});
 	}
 

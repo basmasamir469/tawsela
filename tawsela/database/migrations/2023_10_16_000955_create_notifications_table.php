@@ -12,8 +12,8 @@ class CreateNotificationsTable extends Migration {
 		Schema::create('notifications', function(Blueprint $table) {
 			$table->increments('id');
 			$table->timestamps();
-			$table->integer('user_id')->unsigned();
-			$table->integer('driver_id')->unsigned();
+			$table->BigInteger('user_id')->unsigned();
+			$table->BigInteger('driver_id')->unsigned();
 		});
 	}
 
