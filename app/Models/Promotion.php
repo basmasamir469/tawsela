@@ -11,6 +11,7 @@ class Promotion extends Model implements TranslatableContract
     use Translatable;
 
     protected $table = 'promotions';
+    public $translatedAttributes = ['title']; 
     public $timestamps = true;
     protected $guarded=[];
 

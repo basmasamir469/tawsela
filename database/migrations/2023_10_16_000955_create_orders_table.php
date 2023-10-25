@@ -13,14 +13,14 @@ class CreateOrdersTable extends Migration {
 			$table->increments('id');
 			$table->timestamps();
 			$table->BigInteger('user_id')->unsigned();
-			$table->integer('promotion_id')->unsigned();
-			$table->decimal('total_cost');
-			$table->decimal('price');
+			$table->string('promo_code')->nullable();
+			$table->decimal('total_cost')->nullable();
+			$table->decimal('price')->nullable();
 			$table->BigInteger('driver_id')->unsigned()->nullable();
 			$table->text('notes')->nullable();
 			$table->text('cancel_reason')->nullable();
 			$table->integer('order_status');
-			$table->decimal('discount');
+			$table->decimal('discount')->nullable();
 			$table->string('payment_way');
 		});
 	}

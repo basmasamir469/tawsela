@@ -16,7 +16,7 @@ class CreateAddressesTable extends Migration {
 			$table->text('longitude');
 			$table->text('latitude');
 			$table->BigInteger('user_id')->unsigned();
-			$table->string('name');
+			$table->string('name')->nullable();
 		});
 	}
 

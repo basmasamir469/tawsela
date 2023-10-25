@@ -12,7 +12,7 @@ class CreateOrderDetailsTable extends Migration {
 		Schema::create('order_details', function(Blueprint $table) {
 			$table->increments('id');
 			$table->timestamps();
-			$table->string('start_address');
+			$table->string('start_address')->nullable();
 			$table->string('end_address');
 			$table->text('start_latitude');
 			$table->text('end_latitude');

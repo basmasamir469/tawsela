@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\Api\Driver;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\drivers\CheckCodeRequest;
-use App\Http\Requests\drivers\CheckResetPasswordCodeRequest;
-use App\Http\Requests\drivers\ForgetPasswordRequest;
-use App\Http\Requests\drivers\LoginRequest;
-use App\Http\Requests\drivers\RegisterRequest;
-use App\Http\Requests\drivers\ResetPasswordRequest;
+use App\Http\Requests\CheckCodeRequest;
+use App\Http\Requests\CheckResetPasswordCodeRequest;
+use App\Http\Requests\ForgetPasswordRequest;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\ResetPasswordRequest;
 use App\Mail\VerifyEmail;
 use App\Models\ActivationProcess;
 use App\Models\User;
@@ -31,33 +31,42 @@ class AuthController extends Controller
     {
         $data = $request->validated();
         $password = Hash::make($data['password']);
-
         DB::beginTransaction();
 
-        $driver = User::create([
+        $user = User::create([
              'name'     => $data['name'],
              'password' => $password,
              'address'  => $data['address'],
              'phone'    => $data['phone'],
          ]);
-        $role = Role::where(['name'=>'driver','guard_name'=>'api'])->first();
-        $driver->assignRole($role);     
+         $header = $request->header('X-Role', 'user');
+
+           if($header == 'user')
+           {
+            $user->addMedia($data['image'])
+            ->toMediaCollection('users-images');
+            $role = Role::where(['name'=>'user','guard_name'=>'api'])->first();
+           }
+           else
+           {
+            $user->addMedia($data['image'])
+            ->toMediaCollection('drivers-images');
+            $role = Role::where(['name'=>'driver','guard_name'=>'api'])->first();
+           }
+ 
+        $user->assignRole($role);     
         $code = rand(11111,99999);
         $act_process = ActivationProcess::create([
            'code' => $code,
            'status' => 0 ,
            'type'   =>'phone',
-           'value'  => $driver->phone,
+           'value'  => $user->phone,
         ]);
 
         DB::commit();
 
         // send sms
-        $this->sendSms($driver->phone,$act_process->code);
-
-        $driver->addMedia($data['image'])
-              ->toMediaCollection('drivers-images');
-
+        $this->sendSms($user->phone,$act_process->code);
 
        return $this->dataResponse(null,__('registered successfully! activation code has been sent to your phone number'),200);
     }
@@ -67,7 +76,9 @@ class AuthController extends Controller
     public function verifyUser(CheckCodeRequest $request)
     {
         $data = $request->validated();
-        $code = ActivationProcess::where(['type'=>$data['type'],'value'=>$data['value'],'code'=>$data['code']])->first();
+
+        // type for email or mobile 
+        $code = ActivationProcess::where(['type'=>$data['type'],'value'=>$data['value'],'code'=>$data['code'],'status'=>0])->first();
         if($code)
         {
             DB::beginTransaction();
@@ -192,60 +203,5 @@ class AuthController extends Controller
           }
         }
       
-        // sign up with facebook or google
-
-        public function redirectToProvider($provider)
-        {
-            $validated = $this->validateProvider($provider);
-            if (!is_null($validated)) {
-                return $validated;
-            }
-    
-            return Socialite::driver($provider)->stateless()->redirect();    
-        }
-
-        // redirect to google or facebook callback url 
-
-        public function handleProviderCallback($provider)
-        {
-            $validated = $this->validateProvider($provider);
-            if (!is_null($validated)) {
-                return $validated;
-            }
-            try {
-                $social_user = Socialite::driver($provider)->stateless()->user();
-            } catch (\Exception $e) {
-                return $this->dataResponse(null,$e->getMessage(), 422);
-            }
-                $user_created = User::updateOrCreate([
-                      'provider_id'=>$social_user->getId(),
-                      'provider'   =>$provider
-                ],[  
-                      'email'  =>$social_user->getEmail(),
-                      'address'=>'',
-                      'phone'  =>'',
-                      'is_active_phone'=>0,
-                      'is_active_email'=>1,
-                      'name'  => $social_user->getName()
-                  ]);                
-                $role = Role::where(['name'=>'driver','guard_name'=>'api'])->first();
-                $user_created->assignRole($role);             
-                $user_created->clearMediaCollection('drivers-images');
-                $user_created->addMediaFromUrl($social_user->getAvatar()) 
-                ->preservingOriginal() //middle method
-                ->toMediaCollection('drivers-images');
-                $token = $user_created->createToken('Tawsela')->plainTextToken;
-                return $this->dataResponse(['token'=>$token],__('logged in successfully'),200);
-
-          }    
-
-        public function validateProvider($provider)
-        {
-          if(!in_array($provider,['facebook','google']))
-          {
-            return $this->dataResponse(null,__('Please login using facebook, github or google'),422);
-          }
-        }
-
 
 }

@@ -13,6 +13,7 @@ class Notification extends Model implements TranslatableContract, HasMedia
     use Translatable, InteractsWithMedia;
 
     protected $table = 'notifications';
+    public $translatedAttributes = ['title','description']; 
     public $timestamps = true;
     protected $guarded=[];
 

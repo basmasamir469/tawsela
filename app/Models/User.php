@@ -49,14 +49,19 @@ class User extends Authenticatable implements HasMedia
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-    public function orders()
+    public function userOrders()
     {
-        return $this->hasMany('App\Models\Order');
+        return $this->hasMany('App\Models\Order','user_id');
+    }
+
+    public function driverOrders()
+    {
+        return $this->hasMany('App\Models\Order','driver_id');
     }
 
     public function vehicleDoc()
     {
-        return $this->hasOne('App\Models\VehicleDoc');
+        return $this->hasOne('App\Models\VehicleDoc','driver_id');
     }
 
     public function driveInvoice()
@@ -69,6 +74,11 @@ class User extends Authenticatable implements HasMedia
         return $this->hasMany('App\Models\Address');
     }
 
+    public function pickers()
+    {
+        return $this->hasMany('App\Models\Picker');
+    }
+
     public function promotions()
     {
         return $this->belongsToMany('App\Models\Promotion');
@@ -77,5 +87,18 @@ class User extends Authenticatable implements HasMedia
     public function notifications()
     {
         return $this->hasMany('App\Models\Notification');
+    }
+
+    public function getOrdersCountAttribute()
+    {
+        if(count($this->driverOrders) > 0){
+            return count($this->orders);
+        }
+            return 0;
+    }
+
+    public function getIsNewAttribute()
+    {
+      return  $is_new = count($this->driverOrders) > 0 ? 0 : 1;
     }
 }

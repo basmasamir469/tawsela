@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\drivers;
+namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CheckResetPasswordCodeRequest extends FormRequest
+class ForgetPasswordRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,8 +22,8 @@ class CheckResetPasswordCodeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'value'   =>'required',
-            'code' =>'required',
+            'type'   =>'required|in:phone,email',
+            'value'  =>'required'
         ];
     }
 }

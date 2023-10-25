@@ -4,7 +4,7 @@ namespace App\Http\Requests\drivers;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class RegisterRequest extends FormRequest
+class VehicleDocumentRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,11 +22,14 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'    =>'required',
-            'phone'   =>'required|unique:users|regex:/(01)[0-9]{9}/',
-            'address' =>'required',
-            'password'=>'confirmed|min:6',
-            'image'   =>'required'
-        ];
+            'car_type_id'           => 'required',
+            'car_brand_id'          => 'required',
+            'car_color'             => 'required',
+            'metal_plate_numbers'   => 'required|digits:3',
+            'model_year'            => 'required',
+            'vehicle_license'       => 'required',
+            'vehicle_license_behind'=> 'required',
+            'vehicle_inspection'    => 'nullable'
+           ];
     }
 }

@@ -11,6 +11,7 @@ class CarColor extends Model implements TranslatableContract
     use Translatable;
 
     protected $table = 'car_colors';
+    public $translatedAttributes = ['name']; 
     public $timestamps = true;
     protected $guarded=[];
 

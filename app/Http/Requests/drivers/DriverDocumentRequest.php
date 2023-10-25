@@ -4,7 +4,7 @@ namespace App\Http\Requests\drivers;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class LoginRequest extends FormRequest
+class DriverDocumentRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,12 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type'   =>'required|in:email,phone',
-            'value'  =>'required',
-            'password'=>'required'
+            'national_number'    =>'required|digits:12',
+            'nationalId_image'   =>'required',
+            'driving_license'    =>'required',
+            'personal_image'     =>'required',
+            'drug_analysis'      =>'nullable',
+            'criminal_record'    =>'nullable'
         ];
     }
 }

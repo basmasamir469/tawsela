@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\drivers;
+namespace App\Http\Requests\admins;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ResetPasswordRequest extends FormRequest
+class CarBrandRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,8 @@ class ResetPasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type'   =>'required|in:phone,email',
-            'value' =>'required',
-            'password' =>'required|confirmed|min:6',
+            'name_en'            =>'required',
+            'name_ar'            =>'required',
         ];
     }
 }
