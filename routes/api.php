@@ -53,8 +53,8 @@ Route::group(['prefix'=>'v1','namespace'=>'Api'],function(){
 
             Route::post('addresses','AddressController@store');
             Route::get('addresses','AddressController@index');
-            Route::get('drive-vehicles','UserController@driveVehicles');
-            Route::post('make-order','UserController@makeOrder');
+            Route::get('drive-vehicles','OrderController@driveVehicles');
+            Route::post('make-order','OrderController@makeOrder');
         });
 
     });
