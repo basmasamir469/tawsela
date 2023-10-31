@@ -3,6 +3,7 @@
 namespace App\Transformers;
 
 use App\Models\User;
+use Carbon\Carbon;
 use League\Fractal\TransformerAbstract;
 
 class DriverTransformer extends TransformerAbstract
@@ -44,7 +45,9 @@ class DriverTransformer extends TransformerAbstract
             'image'          => $driver->getFirstMediaUrl('drivers-images'),
             'is_new'         => $driver->is_new,
             'orders_count'   => $driver->orders_count,
-            'total_income'   => $driver->driverOrders->sum('total_cost')
+            'total_income'   => $driver->driverOrders->sum('total_cost'),
+            'total_distance' => $driver->driverOrders->sum('drive_distance'),
+            'connect_hours'  => Carbon::parse($driver->active_hours)->format('H:i')
         ];
 
         // if($this->type=="dashboard"){

@@ -22,18 +22,16 @@ class OrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'address_id'                =>'nullable',
-            'permenant_end_longitude'   =>'nullable',
-            'permenant_end_latitude'    =>'nullable',
             'start_address'             =>'nullable',
             'end_address'               =>'nullable',
-            'permenant_end_address'     =>'nullable',
-            'start_latitude'            =>'nullable',
-            'start_longitude'           =>'nullable',
-            'end_longitude'             =>'required_if:permenant_end_longitude,nullable|required_if:address_id,nullable',
-            'end_latitude'              =>'required_if:permenant_end_latitude,nullable|required_if:address_id,nullable',
+            'start_latitude'            =>'required|numeric|between:-90,90',
+            'start_longitude'           =>'required|numeric|between:-180,180',
+            'end_longitude'             =>'required|numeric|between:-180,180',
+            'end_latitude'              =>'required|numeric|between:-90,90',
             'car_type_id'               =>'required',
-            'promo_code'                =>'nullable'
+            'promo_code'                =>'nullable',
+            'price'                     =>'required|numeric',
+            'drive_distance'            =>'nullable'
 
         ];
     }

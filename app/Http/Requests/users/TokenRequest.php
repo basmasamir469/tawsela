@@ -4,7 +4,7 @@ namespace App\Http\Requests\users;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class AddressRequest extends FormRequest
+class TokenRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,10 +22,9 @@ class AddressRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type'      =>'required|in:0,1,2',
-            'name'      =>'required',
-            'latitude'  =>'required|numerice|between:-90,90',
-            'longitude' =>'required|numeric|between:-180,180'
+           'device_id'    =>'required',
+           'device_type'  =>'required|in:ios,android',
+           'token'        =>'required'
         ];
     }
 }

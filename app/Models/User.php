@@ -83,16 +83,10 @@ class User extends Authenticatable implements HasMedia
     {
         return $this->belongsToMany('App\Models\Promotion');
     }
-
-    public function notifications()
-    {
-        return $this->hasMany('App\Models\Notification');
-    }
-
     public function getOrdersCountAttribute()
     {
         if(count($this->driverOrders) > 0){
-            return count($this->orders);
+            return count($this->driverOrders);
         }
             return 0;
     }
@@ -100,5 +94,20 @@ class User extends Authenticatable implements HasMedia
     public function getIsNewAttribute()
     {
       return  $is_new = count($this->driverOrders) > 0 ? 0 : 1;
+    }
+
+    public function notifyTokens()
+    {
+        return $this->hasMany('App\Models\Token');
+    }
+
+    public function driverNotifications()
+    {
+        return $this->belongsToMany('App\Models\Notification','driver_notification','driver_id','notification_id');
+    }
+
+    public function userNotifications()
+    {
+        return $this->hasMany('App\Models\Notification');
     }
 }

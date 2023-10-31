@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->Call(CarTypeSeeder::class);
         $this->Call(CarColorSeeder::class);
         $this->Call(CarBrandSeeder::class);
-
+        $this->Call(SettingSeeder::class);
         $admin = User::create([
              'name'      => 'admin',
              'email'     => 'admin@admin.com',

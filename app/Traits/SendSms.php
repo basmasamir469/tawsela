@@ -15,7 +15,7 @@ trait SendSms
     public function sendSms($recepient,$code)
     {
 
-        $basic  = new Basic("a4a88ad0", "vdfzzvxtLHp2OeXA");
+        $basic  = new Basic(env('VONAGE_API_KEY'), env('VONAGE_API_SECRET_KEY'));
         $client = new VonageClient($basic);
 
         $response = $client->sms()->send(

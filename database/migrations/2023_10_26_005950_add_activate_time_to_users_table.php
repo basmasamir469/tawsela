@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('car_types', function (Blueprint $table) {
-            $table->decimal('price_per_meter')->nullable();
+        Schema::table('users', function (Blueprint $table) {
+            $table->timestamp('activate_time')->nullable()->after('national_number');
+            $table->time('active_hours')->format('H:i')->nullable()->after('activate_time');
         });
     }
 
@@ -21,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('car_types', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table) {
             //
         });
     }

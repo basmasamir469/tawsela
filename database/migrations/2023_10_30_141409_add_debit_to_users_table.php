@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('car_types', function (Blueprint $table) {
-            $table->decimal('price_per_meter')->nullable();
+        Schema::table('users', function (Blueprint $table) {
+            $table->decimal('debit')->default(0);
         });
     }
 
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('car_types', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table) {
             //
         });
     }

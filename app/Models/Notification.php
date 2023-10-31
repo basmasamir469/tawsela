@@ -16,6 +16,14 @@ class Notification extends Model implements TranslatableContract, HasMedia
     public $translatedAttributes = ['title','description']; 
     public $timestamps = true;
     protected $guarded=[];
-
+    
+    public function drivers()
+    {
+        return $this->belongsToMany('App\Models\User','driver_notification','notification_id','driver_id');
+    }
+    public function user()
+    {
+        return $this->belongsTo('App\Models\User','user_id');
+    }
 
 }

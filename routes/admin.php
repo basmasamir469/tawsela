@@ -16,4 +16,6 @@ Route::group(['prefix'=>'v1','middleware'=>'auth:sanctum','namespace'=>'Admin'],
     Route::put('car_brands/{car_brand}','CarBrandController@update')->name('car_brands.update');
     Route::delete('car_brands/{car_brand}','CarBrandController@destroy')->name('car_brands.destroy');
 
+    Route::post('settings','SettingController@update');
+
 });

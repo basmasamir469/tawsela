@@ -15,5 +15,8 @@ class Promotion extends Model implements TranslatableContract
     public $timestamps = true;
     protected $guarded=[];
 
-
+    public function orders()
+    {
+        return $this->hasMany('App\Models\Order');
+    }
 }

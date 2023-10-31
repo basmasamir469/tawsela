@@ -32,6 +32,7 @@ Route::group(['prefix'=>'v1','namespace'=>'Api'],function(){
     Route::group(['middleware'=>'auth:sanctum'],function(){
          
         Route::post('logout','AuthController@logout');
+        Route::post('submit-token','AuthController@submitToken');
 
         Route::group(['namespace'=>'Driver','middleware'=>'role:driver'],function(){
 
@@ -44,7 +45,16 @@ Route::group(['prefix'=>'v1','namespace'=>'Api'],function(){
             Route::post('activate','DriverController@activate');
             Route::post('current-location','DriverController@currentLocation');
             Route::get('driver-details','DriverController@show');
-            Route::get('pending-orders','DriverController@pendingOrders');
+            Route::get('pending-orders','OrderController@pendingOrders');
+            Route::get('phone-call/{order_id}','OrderController@call');
+            Route::post('cancel-order/{order_id}','OrderController@cancelOrder');
+            Route::get('accept-order/{order_id}','OrderController@acceptOrder');
+            Route::get('start-drive/{order_id}','OrderController@startDrive');
+            Route::post('finish-drive/{order_id}','OrderController@finishDrive');
+            Route::get('complete-drive/{order_id}','OrderController@completeDrive');
+            Route::get('order-details/{id}','OrderController@show');
+            Route::get('drives-dates','DriverController@drivesDates');
+            Route::get('drives','DriverController@drives');
 
         });
 

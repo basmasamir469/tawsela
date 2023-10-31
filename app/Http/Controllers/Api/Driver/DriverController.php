@@ -16,6 +16,8 @@ use App\Transformers\CarColorTransformer;
 use App\Transformers\CarTypeTransformer;
 use App\Transformers\DriverTransformer;
 use App\Transformers\OrderTransformer;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -126,16 +128,33 @@ class DriverController extends Controller
 
     public function modelYears()
     {
-        $model_years = collect(range(2000,2023))->map(fn($year) => ['year'=>$year]);
+        $current_year = Carbon::now()->year;
+        $model_years = collect(range(2000,$current_year))->map(fn($year) => ['year'=>$year]);
         return $this->dataResponse($model_years,'model_years',200);     
     }
 
     public function activate(Request $request)
     {
         $user = $request->user();
+        $today = Carbon::createFromFormat('Y-m-d H:i:s',$user->activate_time??Carbon::now());
+        if($user->active_status)
+        {
+            if($user->active_hours == null){
+                $user->active_hours = Carbon::createFromTime(0, 0);
+            }
+            $start_time = Carbon::createFromFormat('Y-m-d H:i:s',$user->activate_time);
+            $end_time   = Carbon::createFromFormat('Y-m-d H:i:s',Carbon::now());
+            
+            $diff = $start_time->diff($end_time);
+            $user->active_hours = Carbon::createFromFormat('H:i:s',$user->active_hours);
 
+            $user->active_hours->addHours($diff->h)->addMinutes($diff->i);
+        }
+        $user->active_hours = $today->isSameDay(Carbon::now()) ? $user->active_hours: Carbon::createFromTime(0, 0);
         $user->update([
-            'active_status' => $user->active_status? 0 : 1
+            'active_status' => $user->active_status? 0 : 1,
+            'activate_time' => $user->active_status ? null : Carbon::now(),
+            'active_hours'  => $user->active_hours,
         ]);
         $message = $user->active_status? __('user is activated successfully') : __('user is inactivated successfully');
         return $this->dataResponse(null,$message,200);     
@@ -158,21 +177,29 @@ class DriverController extends Controller
        return $this->dataResponse($driver,'driver details',200);
     }
 
-    public function pendingOrders()
+    public function drivesDates()
     {
-        $vehicle_id = auth()->user()->vehicleDoc->car_type_id;
-        $picker     = Picker::where('user_id',auth()->user()->id)->latest()->first();          
-        $orders     = Order::join('order_details','order_details.order_id','=','orders.id')
-                      ->join('users','users.id','orders.user_id')
-                       ->where(['orders.car_type_id'=>$vehicle_id,'orders.order_status'=>Order::PENDING])
-                       ->where(DB::raw("ROUND((degrees(acos(sin(radians($picker->latitude)) * sin(radians(order_details.start_latitude)) +  cos(radians($picker->latitude)) * cos(radians(order_details.start_latitude)) * cos(radians($picker->longitude-order_details.start_longitude)))) * 60 * 1.1515) * 1.609344 , 2)"),'<',100)
-                       ->get();
+         $start_date = auth()->user()->driverOrders()->orderBy('created_at','asc')->first()->created_at;
+         $start_date  = Carbon::parse($start_date)->format('Y-m-d');
+         $end_date  = Carbon::now()->format('Y-m-d');
+         $dates = collect(CarbonPeriod::create($start_date,$end_date))->map(fn($date)=>[$date->format('Y-m-d')]);
+         return $this->dataResponse($dates,'drives dates',200);
+    }
+
+    public function drives(Request $request)
+    {
+        $skip = $request->skip? $request->skip : 0;
+        $take = $request->take? $request->take : 10;
+        $orders = $request->user()->driverOrders()->when(request('date'),function($q){
+                  return $q->whereDate('created_at',request('date'));
+        })->skip($skip)
+          ->take($take)
+          ->get();
+
         $orders = fractal()
         ->collection($orders)
         ->transformWith(new OrderTransformer())
         ->toArray();
-        return $this->dataResponse($orders,'pending orders',200);     
-
+        return $this->dataResponse($orders,'all drives',200);     
     }
-
 }

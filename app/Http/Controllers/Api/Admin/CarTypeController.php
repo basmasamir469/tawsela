@@ -43,8 +43,9 @@ class CarTypeController extends Controller
 
         $car_type = CarType::create([
 
-            'en'=>['name'=>$data['name_en']],
-            'ar'=>['name'=>$data['name_ar']]
+            'en'               =>['name'=>$data['name_en']],
+            'ar'               =>['name'=>$data['name_ar']],
+            'price_per_meter'  =>$data['price']
         ]);
 
         try{
@@ -92,8 +93,9 @@ class CarTypeController extends Controller
         $car_type = CarType::findOrFail($id);
 
         $updated = $car_type->update([
-           'en'=>['name'=>$data['name_en']?? $car_type->translate('en')->name],
-           'ar'=>['name'=>$data['name_ar']??$car_type->translate('ar')->name],
+           'en'               =>['name'=>$data['name_en']?? $car_type->translate('en')->name],
+           'ar'               =>['name'=>$data['name_ar']??$car_type->translate('ar')->name],
+           'price_per_meter'  =>$data['price']
         ]);
         try{
             $car_type->clearMediaCollection('car-images');

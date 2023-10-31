@@ -32,7 +32,7 @@ class VehicleDoc extends Model implements HasMedia
 
     public function driver()
     {
-        return $this->belongsTo('App\Models\User');
+        return $this->belongsTo('App\Models\User','driver_id');
     }
 
 }

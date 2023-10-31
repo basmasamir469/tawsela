@@ -21,9 +21,9 @@ class CarTypeSeeder extends Seeder
         foreach($car_types_en as $key => $type)
         {
            $car_type =  CarType::create([
-                'en'     => ['name'=>$car_types_en[$key]],
-                'ar'     => ['name'=>$car_types_ar[$key][0]],
-                'price'  => $car_types_ar[$key][1]
+                'en'               => ['name'=>$car_types_en[$key]],
+                'ar'               => ['name'=>$car_types_ar[$key][0]],
+                'price_per_meter'  => $car_types_ar[$key][1]
             ]);
            $car_images = ['cars.jpg','cars.jpg','cars.jpg','cars.jpg','cars.jpg'];
            $path='public/images/cars/'.$car_images[$key];

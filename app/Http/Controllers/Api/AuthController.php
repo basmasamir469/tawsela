@@ -9,8 +9,10 @@ use App\Http\Requests\ForgetPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\ResetPasswordRequest;
+use App\Http\Requests\users\TokenRequest;
 use App\Mail\VerifyEmail;
 use App\Models\ActivationProcess;
+use App\Models\Token;
 use App\Models\User;
 use App\Traits\SendSms;
 use Illuminate\Http\Request;
@@ -201,6 +203,20 @@ class AuthController extends Controller
           {
             return $this->dataResponse(null,__('logged out successfully'),200);
           }
+        }
+
+        public function submitToken(TokenRequest $request)
+        {
+           $data = $request->validated();
+           Token::updateOrCreate(
+           ['device_id'     =>$data['device_id']],
+           [
+             'user_id'      =>$request->user()->id,
+             'device_type'  =>$data['device_type'],
+             'token'        =>$data['token']
+           ]);
+
+           return $this->dataResponse(null,__('token submitted successfully'),200);
         }
       
 

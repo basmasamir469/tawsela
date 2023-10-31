@@ -43,6 +43,8 @@ class AddressTransformer extends TransformerAbstract
             'id'             => $address->id,
             'name'           => $address->name,
             'type'           => $address->type,
+            'longitude'      => $address->longitude,
+            'latitude'       => $address->latitude
         ];
         return $array;
     }
