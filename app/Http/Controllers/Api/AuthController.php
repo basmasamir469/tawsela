@@ -9,9 +9,11 @@ use App\Http\Requests\ForgetPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\ResetPasswordRequest;
+use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Requests\users\TokenRequest;
 use App\Mail\VerifyEmail;
 use App\Models\ActivationProcess;
+use App\Models\Notification;
 use App\Models\Token;
 use App\Models\User;
 use App\Traits\SendSms;
@@ -84,15 +86,32 @@ class AuthController extends Controller
         if($code)
         {
             DB::beginTransaction();
-            $driver = User::where($data['type'],$data['value'])->first();
-            $data['type'] == 'email' ? $driver->update(['is_active_email'=>1]) : $driver->update(['is_active_phone'=>1]);
+            $user = User::where($data['type'],$data['value'])->first();
+            $data['type'] == 'email' ? $user->update(['is_active_email'=>1]) : $user->update(['is_active_phone'=>1]);
 
             $code->update([
                 'status' =>1
             ]);
             ActivationProcess::where(['type'=>$data['type'],'value'=>$data['value'],'status'=>0])->delete();
             DB::commit();
-            return $this->dataResponse(null,__('your account is activated successfully!'),200); 
+            Auth::login($user);
+            $auth_user = $request->user();
+            $token = $auth_user->createToken("TAWSELA")->plainTextToken;
+            if($auth_user->hasRole('driver'))
+            {
+              $notification = Notification::create([
+                'user_id' => $auth_user->id,
+                'en'=>['title'=>'A special welcome bonus for you ! ','description'=>'welcome to our application'],
+                'ar'=>['title'=>' ! بونص ترحيبي خاص  بك ','description'=>'مرحبا بك في تطبيقنا']
+            ]);
+            $data =[
+              'title'=>$notification->title,
+              'body' =>$notification->description
+            ];
+             $submit_token = Token::where('user_id',auth()->user()->id)->first();
+             $this->notifyByFirebase([$submit_token->token],$data,$submit_token->device_type);
+            }
+            return $this->dataResponse(['token'=>$token],__('your account is activated successfully!'),200); 
         }
             return $this->dataResponse(null,__('invalid code'),422); 
 
@@ -106,16 +125,15 @@ class AuthController extends Controller
         $data = $request->validated();
         if(Auth::attempt([$data['type'] => $data['value'], 'password' => $data['password']]))
         {
-           $driver = $request->user();
-           $code = rand(11111,99999);
-           $activated = $data['type']=='email'? $driver->is_active_email: $driver->is_active_phone;
+           $user = $request->user();
+           $activated = $data['type']=='email'? $user->is_active_email: $user->is_active_phone;
 
               if($activated)
               {
-                $token = $driver->createToken("TAWSELA")->plainTextToken;
-                return $this->dataResponse(['activation'=>$driver->is_active_phone , 'token'=>$token],__('logged in successfully'),200);
+                $token = $user->createToken("TAWSELA")->plainTextToken;
+                return $this->dataResponse(['activation'=>$user->is_active_phone , 'token'=>$token],__('logged in successfully'),200);
               }
-
+              $code = rand(11111,99999);
               $act_process = ActivationProcess::create([
                 'code' => $code,
                 'status' => 0 ,
@@ -125,13 +143,13 @@ class AuthController extends Controller
 
              if($data['type'] == 'email')
              {
-               Mail::to($driver->email)
+               Mail::to($user->email)
               ->bcc("basmaelazony@gmail.com")
               ->send(new VerifyEmail($code)); 
              }
              else
              {
-              $this->sendSms($driver->phone,$act_process->code);
+              $this->sendSms($user->phone,$act_process->code);
              }
            return $this->dataResponse(['activation'=>0], __('your account has not activated yet, activation code has been sent to your phone!'),422);
          }
@@ -218,6 +236,107 @@ class AuthController extends Controller
 
            return $this->dataResponse(null,__('token submitted successfully'),200);
         }
+
+        public function updateProfile(UpdateProfileRequest $request)
+        {
+            $data = $request->validated();
+            $user = $request->user();
+            $national_number = isset($data['national_number'])? $data['national_number'] : null;
+            DB::beginTransaction();
+            $user->update([
+                'name'            => $data['name'],
+                'address'         => $data['address'],
+                'phone'           => $data['phone'],
+                'national_number' => $national_number  
+            ]);
+            if($user->hasRole('driver'))
+            {
+              $vehicle = $user->vehicleDoc();
+              $vehicle->update([
+                  'car_type_id'         => $data['car_type_id'],
+                  'car_brand_id'        => $data['car_brand_id'],
+                  'car_color'           => $data['car_color'],
+                  'metal_plate_numbers' => $data['metal_plate_numbers'],
+                  'model_year'          => $data['model_year'],
+                  'license_expire_date' => $data['license_expire_date']
+              ]);
+              try{
+                if($data['image'])
+                {
+                 $user->clearMediaCollection('drivers-images');
+                 $user->addMedia($data['image'])
+                 ->toMediaCollection('drivers-images');
+                }   
+  
+                if($data['vehicle_license']){
+                     $vehicle->clearMediaCollection('vehicle_licenses');
+                     $vehicle->addMedia($data['vehicle_license'])
+                     ->toMediaCollection('vehicle_licenses');
+                }
+
+                if($data['vehicle_license_behind']){
+                  $vehicle->clearMediaCollection('vehicle_licenses_behind');
+                  $vehicle->addMedia($data['vehicle_license_behind'])
+                  ->toMediaCollection('vehicle_licenses_behind');
+                }
+
+                if($data['vehicle_inspection']){
+                  $vehicle->clearMediaCollection('vehicle_inspections');
+                  $vehicle->addMedia($data['vehicle_inspection'])
+                  ->toMediaCollection('vehicle_inspections');
+                }
+
+                if($data['nationalId_image']){
+                  $vehicle->clearMediaCollection('nationalId_images');
+                  $vehicle->addMedia($data['nationalId_image'])
+                  ->toMediaCollection('nationalId_images');
+                }
+
+                if($data['personal_image']){
+                  $vehicle->clearMediaCollection('personal_images');
+                  $vehicle->addMedia($data['personal_image'])
+                  ->toMediaCollection('personal_images');
+                }
+
+                if($data['driving_license']){
+                  $vehicle->clearMediaCollection('driving_licenses');
+                  $vehicle->addMedia($data['driving_license'])
+                  ->toMediaCollection('driving_licenses');
+                }
+
+                if($data['drug_analysis']){
+                  $vehicle->clearMediaCollection('Drug_analyses');
+                  $vehicle->addMedia($data['drug_analysis'])
+                  ->toMediaCollection('Drug_analyses');
+                }
+
+                if($data['criminal_record']){
+                  $vehicle->clearMediaCollection('criminal_records');
+                  $vehicle->addMedia($data['criminal_record'])
+                  ->toMediaCollection('criminal_records');
+                }
+              DB::commit();
+              }
+              catch(\Exception $e)
+              {
+               DB::rollBack();
+               return $this->dataResponse(null,$e->getMessage(),422);
+              }
+
+            }
+            else{
+              if($data['image'])
+              {
+               $user->clearMediaCollection('users-images');
+               $user->addMedia($data['image'])
+               ->toMediaCollection('users-images');
+              }   
+              DB::commit();
+            }
+            
+         return $this->dataResponse(null,__('profile updated successfully'),200);
+        }
+    
       
 
 }

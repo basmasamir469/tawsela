@@ -45,8 +45,8 @@ class DriverTransformer extends TransformerAbstract
             'image'          => $driver->getFirstMediaUrl('drivers-images'),
             'is_new'         => $driver->is_new,
             'orders_count'   => $driver->orders_count,
-            'total_income'   => $driver->driverOrders->sum('total_cost'),
-            'total_distance' => $driver->driverOrders->sum('drive_distance'),
+            'total_income'   => $driver->total_income,
+            'total_distance' => $driver->driverOrders()->whereDate('created_at',Carbon::now()->format('Y-m-d'))->sum('drive_distance'),
             'connect_hours'  => Carbon::parse($driver->active_hours)->format('H:i')
         ];
 

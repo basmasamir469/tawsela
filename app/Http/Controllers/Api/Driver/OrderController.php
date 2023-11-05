@@ -20,13 +20,7 @@ class OrderController extends Controller
 {
     public function pendingOrders()
     {
-        $vehicle_id = auth()->user()->vehicleDoc->car_type_id;
-        $picker     = Picker::where('user_id',auth()->user()->id)->latest()->first();          
-        $orders     = Order::join('order_details','order_details.order_id','=','orders.id')
-                       ->join('users','users.id','orders.user_id')
-                       ->where(['orders.car_type_id'=>$vehicle_id,'orders.order_status'=>Order::PENDING])
-                       ->where(DB::raw("ROUND((degrees(acos(sin(radians($picker->latitude)) * sin(radians(order_details.start_latitude)) +  cos(radians($picker->latitude)) * cos(radians(order_details.start_latitude)) * cos(radians($picker->longitude-order_details.start_longitude)))) * 60 * 1.1515) * 1.609344 , 2)"),'<',100)
-                       ->get();
+        $orders = auth()->user()->pendingOrders();
         $orders = fractal()
         ->collection($orders)
         ->transformWith(new OrderTransformer())
@@ -146,11 +140,20 @@ class OrderController extends Controller
             $driver->save();
 
             $order = fractal($order,new OrderTransformer('finished_drive'))->toArray();
-            return $this->dataResponse($order,__('drive is finished'),200);
+            return $this->dataResponse(null,__('drive is finished'),200);
     
         }
             return $this->dataResponse(null,__('drive cannot be finished'),422);
     }
+
+    public function showFinishedDrive($id)
+    {
+        $order = Order::findOrFail($id);
+
+        $order = fractal($order,new OrderTransformer('finished_drive'))->toArray();
+        return $this->dataResponse($order,__('drive details'),200);
+    }
+
 
     public function completeDrive($id)
     {

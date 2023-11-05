@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Builder;
 
 class Order extends Model 
 {
@@ -47,26 +49,43 @@ class Order extends Model
         return $Km .' Km';
     }
 
-    public function getDriveDistanceAttribute()
+    public function calculateDriveDistance($st_long,$end_long,$st_lat,$end_lat)
     {
-        if(!$this->attributes['drive_distance'])
-        {
-            $from_long= $this->orderDetails?->start_longitude;
-            $to_long  = $this->orderDetails?->end_longitude;
-            $from_lat = $this->orderDetails?->start_latitude;
-            $to_lat   = $this->orderDetails?->end_latitude;
+            $from_long= $st_long;
+            $to_long  = $end_long;
+            $from_lat = $st_lat;
+            $to_lat   = $end_lat;
             $theta    = $from_long - $to_long;
             $dist     = sin(deg2rad($from_lat)) * sin(deg2rad($to_lat)) +  cos(deg2rad($from_lat)) * cos(deg2rad($to_lat)) * cos(deg2rad($theta));
             $dist     = acos($dist);
             $dist     = rad2deg($dist);
             $miles    = $dist * 60 * 1.1515;
             $Km       = round($miles *1.609344,2);
-            return $Km .' Km';    
-        }
+
+          return $Km;    
     }
 
     public function promocode()
     {
         return $this->belongsTo('App\Models\Promotion');
+    }
+
+    public function scopeFilterByDate($q)
+    {
+         return $q->when(request('filter'),function($q){
+            if(request('filter') == 'day')
+            {
+              return $q->whereDate('orders.created_at',Carbon::today());
+            }
+            if(request('filter') == 'week')
+            {
+              return $q->whereBetween('orders.created_at',[Carbon::now()->startOfWeek(),Carbon::now()->endOfWeek()]);
+            }
+            if(request('filter') == 'month')
+            {
+              return $q->whereBetween('orders.created_at',[Carbon::now()->startOfMonth(),Carbon::now()->endOfMonth()]);
+            }
+          });
+
     }
 }

@@ -41,5 +41,8 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => 'http://localhost:8000/login/google/callback',
     ],
+    'stripe' => [
+        'stripe_key' => env('STRIPE_KEY')
+    ]
 
 ];

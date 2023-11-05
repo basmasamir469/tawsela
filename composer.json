@@ -17,6 +17,8 @@
         "spatie/laravel-fractal": "^6.0",
         "spatie/laravel-medialibrary": "^10.13",
         "spatie/laravel-permission": "^5.11",
+        "srmklive/paypal": "~1.0",
+        "stripe/stripe-php": "^13.2",
         "vonage/client": "^4.0"
     },
     "require-dev": {

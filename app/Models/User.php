@@ -3,9 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -20,12 +23,6 @@ class User extends Authenticatable implements HasMedia
      *
      * @var array<int, string>
      */
-    // protected $fillable = [
-    //     'name',
-    //     'email',
-    //     'password',
-    // ];
-
     protected $guarded=[];
 
     /**
@@ -39,6 +36,15 @@ class User extends Authenticatable implements HasMedia
     ];
 
     protected $guard = 'api';
+
+    /*
+    
+    account_status 
+
+    0 => closed
+    1 => opened 
+
+    */
 
     /**
      * The attributes that should be cast.
@@ -85,10 +91,12 @@ class User extends Authenticatable implements HasMedia
     }
     public function getOrdersCountAttribute()
     {
-        if(count($this->driverOrders) > 0){
-            return count($this->driverOrders);
-        }
-            return 0;
+       return $this->driverOrders()->whereDate('created_at',Carbon::now()->format('Y-m-d'))->count();
+    }
+
+    public function getTotalIncomeAttribute()
+    {
+        return $this->driverOrders()->whereDate('created_at',Carbon::now()->format('Y-m-d'))->sum('total_cost');
     }
 
     public function getIsNewAttribute()
@@ -110,4 +118,34 @@ class User extends Authenticatable implements HasMedia
     {
         return $this->hasMany('App\Models\Notification');
     }
+
+    public function getDriverDistanceAttribute()
+    {
+        return $this->driverOrders->sum(function ($order) {
+            return $order->drive_distance;
+        });
+    }
+
+    public function unapprovedOrders() 
+    {
+        $vehicle_id = auth()->user()->vehicleDoc->car_type_id;
+        $picker     = Picker::where('user_id',auth()->user()->id)->latest()->first();          
+        $orders     = Order::join('order_details','order_details.order_id','=','orders.id')
+                       ->join('users','users.id','orders.user_id')
+                       ->where(['orders.car_type_id'=>$vehicle_id,'orders.order_status'=>Order::CANCELLED,'orders.driver_id'=>Null])
+                       ->where(DB::raw("ROUND((degrees(acos(sin(radians($picker->latitude)) * sin(radians(order_details.start_latitude)) +  cos(radians($picker->latitude)) * cos(radians(order_details.start_latitude)) * cos(radians($picker->longitude-order_details.start_longitude)))) * 60 * 1.1515) * 1.609344 , 2)"),'<',100);
+      return $orders;
+    }
+
+    public function pendingOrders() 
+    {
+        $vehicle_id = auth()->user()->vehicleDoc->car_type_id;
+        $picker     = Picker::where('user_id',auth()->user()->id)->latest()->first();          
+        $orders     = Order::join('order_details','order_details.order_id','=','orders.id')
+                       ->join('users','users.id','orders.user_id')
+                       ->where(['orders.car_type_id'=>$vehicle_id,'orders.order_status'=>Order::PENDING])
+                       ->where(DB::raw("ROUND((degrees(acos(sin(radians($picker->latitude)) * sin(radians(order_details.start_latitude)) +  cos(radians($picker->latitude)) * cos(radians(order_details.start_latitude)) * cos(radians($picker->longitude-order_details.start_longitude)))) * 60 * 1.1515) * 1.609344 , 2)"),'<',100);
+        return $orders;
+    }
+
 }

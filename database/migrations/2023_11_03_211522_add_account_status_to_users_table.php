@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->timestamp('activate_time')->nullable()->after('national_number');
-            $table->time('active_hours')->format('H:i')->default('00:00')->after('activate_time');
+            $table->integer('account_status')->default(1);
         });
     }
 

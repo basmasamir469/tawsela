@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->timestamp('activate_time')->nullable()->after('national_number');
-            $table->time('active_hours')->format('H:i')->default('00:00')->after('activate_time');
+        Schema::table('vehicle_docs', function (Blueprint $table) {
+            $table->date('license_expire_date');
         });
     }
 
@@ -22,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('vehicle_docs', function (Blueprint $table) {
             //
         });
     }

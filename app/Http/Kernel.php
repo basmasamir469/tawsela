@@ -72,5 +72,6 @@ class Kernel extends HttpKernel
         'admin'                   => \App\Http\Middleware\Admin::class,
         'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
         'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
+        'is_account_opened' => \App\Http\Middleware\IsAccountOpened::class
     ];
 }

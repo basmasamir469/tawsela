@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\Driver;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\drivers\DriverDocumentRequest;
+use App\Http\Requests\drivers\UpdateDriverDocumentRequest;
 use App\Http\Requests\drivers\VehicleDocumentRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Models\CarBrand;
 use App\Models\CarColor;
 use App\Models\CarType;
@@ -16,6 +18,7 @@ use App\Transformers\CarColorTransformer;
 use App\Transformers\CarTypeTransformer;
 use App\Transformers\DriverTransformer;
 use App\Transformers\OrderTransformer;
+use App\Transformers\WalletTransformer;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Query\JoinClause;
@@ -71,7 +74,8 @@ class DriverController extends Controller
          'car_brand_id'        => $data['car_brand_id'],
          'car_color'           => $data['car_color'],
          'metal_plate_numbers' => $data['metal_plate_numbers'],
-         'model_year'          => $data['model_year']
+         'model_year'          => $data['model_year'],
+         'license_expire_date' => $data['license_expire_date']
         ]);
         
         try
@@ -139,18 +143,21 @@ class DriverController extends Controller
         $today = Carbon::createFromFormat('Y-m-d H:i:s',$user->activate_time??Carbon::now());
         if($user->active_status)
         {
-            if($user->active_hours == null){
-                $user->active_hours = Carbon::createFromTime(0, 0);
-            }
             $start_time = Carbon::createFromFormat('Y-m-d H:i:s',$user->activate_time);
-            $end_time   = Carbon::createFromFormat('Y-m-d H:i:s',Carbon::now());
-            
+            $end_time   = Carbon::createFromFormat('Y-m-d H:i:s',Carbon::now());     
             $diff = $start_time->diff($end_time);
             $user->active_hours = Carbon::createFromFormat('H:i:s',$user->active_hours);
-
             $user->active_hours->addHours($diff->h)->addMinutes($diff->i);
+            
+            if(!$today->isSameDay(Carbon::now()))
+            {
+               $user->active_hours = Carbon::createFromTime(0, 0);
+               $start_time = Carbon::now()->startOfDay();
+               $end_time   = Carbon::createFromFormat('Y-m-d H:i:s',Carbon::now());
+               $diff = $start_time->diff($end_time);
+               $user->active_hours->addHours($diff->h)->addMinutes($diff->i);
+            }    
         }
-        $user->active_hours = $today->isSameDay(Carbon::now()) ? $user->active_hours: Carbon::createFromTime(0, 0);
         $user->update([
             'active_status' => $user->active_status? 0 : 1,
             'activate_time' => $user->active_status ? null : Carbon::now(),
@@ -201,5 +208,33 @@ class DriverController extends Controller
         ->transformWith(new OrderTransformer())
         ->toArray();
         return $this->dataResponse($orders,'all drives',200);     
+    }
+
+    public function voiceAlert(Request $request)
+    {
+       $user =  $request->user();
+       $user->update([
+             'voice_alert'=> $user->voice_alert? 0 : 1
+        ]);
+       $message = $user->voice_alert? __('voice alert on'):__('voice alert off');
+        return $this->dataResponse(null,$message,200);     
+    }
+
+    public function activateNotifications(Request $request)
+    {
+        $user = $request->user();
+        $user ->update([
+            'notify_status' => $user->notify_status? 0 : 1
+        ]);
+        $message = $user->notify_status? __('receive notifications on'):__('receive notifications off');
+        return $this->dataResponse(null,$message,200);     
+    }
+
+    public function myWallet(Request $request)
+    {
+        $wallet = auth()->user();
+        $wallet = fractal($wallet,new WalletTransformer())->toArray();
+
+        return $this->dataResponse($wallet,('my wallet'),200);
     }
 }

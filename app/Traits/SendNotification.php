@@ -13,6 +13,7 @@
             );
             $iosFcmFields = array(
                 'registration_ids' => $tokens,
+                'topic'  => 'welcome-bonus',
                 'priority' => 'high',
                 "content_available"=> true,
                 'notification' => $fcmMsg,
@@ -20,8 +21,10 @@
             );
             $androidFcmFields = array(
                 'registration_ids' => $tokens,
+                'topic'  => 'welcome-bonus',
                 'priority' => 'high',
                 "content_available"=> true,
+                'notification' => $fcmMsg,
                 'data' => $data
             );
 

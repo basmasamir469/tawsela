@@ -28,13 +28,15 @@ Route::group(['prefix'=>'v1','namespace'=>'Api'],function(){
     Route::post('reset-password/checkcode','AuthController@checkResetPasswordCode');
     Route::post('reset-password','AuthController@resetPassword');
 
-
     Route::group(['middleware'=>'auth:sanctum'],function(){
          
         Route::post('logout','AuthController@logout');
         Route::post('submit-token','AuthController@submitToken');
+        Route::post('update-profile','AuthController@updateProfile');
 
         Route::group(['namespace'=>'Driver','middleware'=>'role:driver'],function(){
+
+          Route::group(['middleware' => 'is_account_opened'],function(){
 
             Route::post('driver-documents' ,'DriverController@driverDocuments');
             Route::post('vehicle-documents','DriverController@vehicleDocuments');
@@ -55,7 +57,14 @@ Route::group(['prefix'=>'v1','namespace'=>'Api'],function(){
             Route::get('order-details/{id}','OrderController@show');
             Route::get('drives-dates','DriverController@drivesDates');
             Route::get('drives','DriverController@drives');
+            Route::get('finished-drive/{order_id}','OrderController@showFinishedDrive');
+            Route::post('voice-alert','DriverController@voiceAlert');
+            Route::post('activate-notifications','DriverController@activateNotifications');
+            Route::get('my-wallet','DriverController@myWallet');
 
+        });
+        
+            Route::post('payment','PaymentController@stripe')->name('payment.store');
         });
 
 

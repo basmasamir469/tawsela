@@ -36,10 +36,6 @@ class OrderController extends Controller
 
     if($data['promo_code'])
     {
-        if($request->user()->userOrders()->where(['promo_code'=>$data['promo_code'],'order_status'=>Order::ACCEPTED])->first())
-        {
-            return $this->dataResponse(null,__('this promo code is invalid'),422);
-        }
     
         if(!Promotion::where('code',$data['promo_code'])->where('expire_date','>',Carbon::now())->first())
         {
@@ -47,6 +43,11 @@ class OrderController extends Controller
         }
 
         $promotion = Promotion::where('code',$data['promo_code'])->first();
+
+        if($request->user()->userOrders()->where(['promotion_id'=>$promotion->id,'order_status'=>Order::ACCEPTED])->first())
+        {
+            return $this->dataResponse(null,__('this promo code is invalid'),422);
+        }
 
         if($promotion?->orders()->where('order_status',Order::ACCEPTED)->count() > 10)
         {
@@ -64,8 +65,7 @@ class OrderController extends Controller
     'price'          => $data['price'],
     'price_after_discount'=> $price_after_discount?? 0,
     'vat'                 => $setting->value['en'],
-    'payment_way'         => 'cash'
-
+    'payment_way'         => 'cash',
     ]);
     $order->orderDetails()->create([
     'start_address'   =>$data['start_address'],
@@ -75,10 +75,16 @@ class OrderController extends Controller
     'end_latitude'    =>$data['end_latitude'],
     'end_longitude'   =>$data['end_longitude']
     ]);
-    DB::commit();
 
     $start_address_lat  = $order->orderDetails->start_latitude;
+    $end_address_long    = $order->orderDetails->end_longitude;
+    $end_address_lat    = $order->orderDetails->end_latitude;
     $start_address_long = $order->orderDetails->start_longitude;
+
+    $order->drive_distance = $request->drive_distance?? $order->calculateDriveDistance($start_address_long,$end_address_long,$start_address_lat,$end_address_lat);
+    $order->save();
+
+    DB::commit();
 
      $driver_ids = User::join('vehicle_docs',function($join) use($order){
                      return $join->on('vehicle_docs.driver_id','=','users.id')
@@ -89,6 +95,7 @@ class OrderController extends Controller
                         ->limit(1);
                     })->where(DB::raw("ROUND((degrees(acos(sin(radians(picker.latitude)) * sin(radians($start_address_lat)) +  cos(radians(picker.latitude)) * cos(radians($start_address_lat)) * cos(radians(picker.longitude-$start_address_long)))) * 60 * 1.1515) * 1.609344 , 2)"),'<',100)
                     ->where('users.active_status',1)
+                    ->where('users.account_status',1)
                    ->pluck('users.id')->toArray();
 
     $notification = Notification::create([
