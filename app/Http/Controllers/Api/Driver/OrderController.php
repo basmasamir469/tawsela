@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api\Driver;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\drivers\CancelOrderRequest;
+use App\Models\DriveInvoice;
 use App\Models\Notification;
 use App\Models\Order;
 use App\Models\Picker;
 use App\Models\Promotion;
 use App\Models\Token;
+use App\Transformers\DriveInvoiceTransformer;
 use App\Transformers\OrderTransformer;
 use Carbon\Carbon;
 use Vonage\Client ;
@@ -40,10 +42,11 @@ class OrderController extends Controller
           'driver_id'   =>auth()->user()->id,
         ]);
         $notification = Notification::create([
-            'user_id' => $order->user_id,
+            // 'user_id' => $order->user_id,
             'ar'      =>['title'=>'تم قبول طلبك','description'=>'من فضلك انتظر السائق في الطريق اليك'],
             'en'      =>['title'=>'your order is accepted','description'=>'please wait the driver is on his way to you ']
         ]);
+        $notification->users()->attach($order->user_id);
         DB::commit();
         $token = Token::where('user_id',$order->user_id)->first();
         if($token)
@@ -81,10 +84,11 @@ class OrderController extends Controller
               'cancel_reason'  =>$data['cancel_reason']
             ]);
             $notification = Notification::create([
-                'user_id' =>$order->user_id,
+               // 'user_id' => $order->user_id,
                 'ar'      =>['title'=>' تم الغاء طلبك','description'=>' ناسف لابلاغك انه تم الغاء طلبك '],
                 'en'      =>['title'=>' your order is cancelled','description'=>'we are sorry to inform you that you order is cancelled for ']
             ]);
+            $notification->users()->attach($order->user_id);
             $token = Token::where('user_id',$order->user_id)->first();
             if($token)
             {
@@ -93,7 +97,7 @@ class OrderController extends Controller
                    'title'      => $notification->title,
                    'body'       => $notification->description,
                    'action_id'  => $order->id,
-                   'action_type'=> 'accept-order'
+                   'action_type'=> 'cancel-order'
                 ];
               $this->notifyByFirebase([$token->token],$data,$token->device_type);
             }
@@ -129,31 +133,40 @@ class OrderController extends Controller
             $total_cost = $order->price_after_discount? ($order->price_after_discount + $waiting_price): ($order->price + $waiting_price);
             $vat = ($total_cost * $order->vat )/100;
             $total_cost += $vat;
+
+            DB::beginTransaction();
+
             $order->update([
               'order_status' =>Order::FINISHED,
               'waiting_price'=>$waiting_price,
               'total_cost'   => $total_cost,
               'end_time'     => Carbon::now(),
             ]);
+            $order->driveInvoice()->create([
+             'price'         => $order->price_after_discount?? $order->price,
+             'taxes'         => $vat,
+             'total_cost'    => $total_cost,
+             'waiting_time'  => $waiting_price,
+             'driver_id'     => $order->driver_id,
+             'user_id'       => $order->user_id
+            ]);
             $driver = $order->driver;
             $driver->debit += $vat;
             $driver->save();
 
-            $order = fractal($order,new OrderTransformer('finished_drive'))->toArray();
+            DB::commit();
             return $this->dataResponse(null,__('drive is finished'),200);
     
         }
             return $this->dataResponse(null,__('drive cannot be finished'),422);
     }
 
-    public function showFinishedDrive($id)
+    public function showDriveInvoice($id)
     {
-        $order = Order::findOrFail($id);
-
-        $order = fractal($order,new OrderTransformer('finished_drive'))->toArray();
-        return $this->dataResponse($order,__('drive details'),200);
+        $drive_invoice = Order::findOrFail($id)->driveInvoice;
+        $drive_invoice = fractal($drive_invoice,new DriveInvoiceTransformer())->toArray();
+        return $this->dataResponse($drive_invoice,__('drive invoice'),200);
     }
-
 
     public function completeDrive($id)
     {
@@ -194,5 +207,40 @@ class OrderController extends Controller
         $response = $client->voice()->createOutboundCall($outboundCall);
         
         var_dump($response);
+    }
+
+    public function arrived($id)
+    {
+       $order = Order::findOrFail($id);
+       if($order->order_status == Order::ACCEPTED)
+       {
+        DB::beginTransaction();
+        $order->update([
+            'order_status'=> Order::ARRIVED
+           ]);
+
+           $notification = Notification::create([
+            // 'user_id' => $order->user_id,
+            'ar'      =>['title'=>'وصل السائق الخاص بك','description'=>'من فضلك عليك ان تكون هناك في غضون خمس دقائق'],
+            'en'      =>['title'=>'your driver has arrived now','description'=>'please you should be there in five minutes ']
+        ]);
+        $notification->users()->attach($order->user_id);
+        DB::commit();
+        $token = Token::where('user_id',$order->user_id)->first();
+        if($token)
+        {
+            $data =
+            [
+               'title'      => $notification->title,
+               'body'       => $notification->description,
+               'action_id'  => $order->id,
+               'action_type'=> 'arrived'
+            ];
+           $this->notifyByFirebase([$token->token],$data,$token->device_type);
+           
+       }  
+       return $this->dataResponse(null,__('arrived successfully'),200);     
+       }
+
     }
 }

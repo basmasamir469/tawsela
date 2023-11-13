@@ -12,7 +12,6 @@ class CreateDriveInvoicesTable extends Migration {
 		Schema::create('drive_invoices', function(Blueprint $table) {
 			$table->increments('id');
 			$table->timestamps();
-			$table->string('drive_number');
 			$table->decimal('price');
 			$table->decimal('taxes');
 			$table->decimal('total_cost');

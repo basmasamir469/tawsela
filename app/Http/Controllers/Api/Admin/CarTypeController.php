@@ -114,8 +114,6 @@ class CarTypeController extends Controller
         }
             return $this->dataResponse(null,__('failed to update'),500);
 
-
-
     }
 
     /**

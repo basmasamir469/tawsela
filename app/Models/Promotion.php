@@ -19,4 +19,9 @@ class Promotion extends Model implements TranslatableContract
     {
         return $this->hasMany('App\Models\Order');
     }
+
+    public function notification()
+    {
+        return $this->belongsTo('App\Models\Notification');
+    }
 }

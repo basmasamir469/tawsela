@@ -89,11 +89,6 @@ class CreateForeignKeys extends Migration {
 						->onDelete('cascade')
 						->onUpdate('cascade');
 		});
-		Schema::table('promotion_user', function(Blueprint $table) {
-			$table->foreign('order_id')->references('id')->on('orders')
-						->onDelete('cascade')
-						->onUpdate('cascade');
-		});
 		Schema::table('car_type_translations', function(Blueprint $table) {
 			$table->foreign('car_type_id')->references('id')->on('car_types')
 						->onDelete('cascade')
@@ -173,9 +168,6 @@ class CreateForeignKeys extends Migration {
 		});
 		Schema::table('promotion_user', function(Blueprint $table) {
 			$table->dropForeign('promotion_user_user_id_foreign');
-		});
-		Schema::table('promotion_user', function(Blueprint $table) {
-			$table->dropForeign('promotion_user_order_id_foreign');
 		});
 		Schema::table('cart_type_translations', function(Blueprint $table) {
 			$table->dropForeign('cart_type_translations_cart_type_id_foreign');

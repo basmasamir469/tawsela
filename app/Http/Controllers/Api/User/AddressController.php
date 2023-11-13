@@ -41,4 +41,16 @@ class AddressController extends Controller
         return $this->dataResponse(null,__('address stored successfully'),200);     
 
     }
+
+    public function update(AddressRequest $request,$id)
+    {
+        $data = $request->validated();
+        $request->user()->addresses()->where(['type'=>$data['type'],'id'=>$id])->update([
+            'name'       => $data['name'],
+            'latitude'   => $data['latitude'],
+            'longitude'   => $data['longitude'],
+        ]);
+        return $this->dataResponse(null,__('address updated successfully'),200);     
+
+    }
 }

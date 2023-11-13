@@ -52,29 +52,36 @@ class OrderTransformer extends TransformerAbstract
         ];
 
          if($this->type == "order_details"){
-            //  $array['total_cost'] = $order->price_after_discount ;
              $array['vat']        = $order->vat .'%';
              $array['notes']      = $order->notes??__('no notes');
          }
 
-        if($this->type == "finished_drive")
+        if($this->type == 'drive_details')
         {
-         $finish_time  = Carbon::parse($order->end_time);
-         $start_time   = Carbon::parse($order->start_time);
-         $second_array = [
-            'id'             => $order->id,
-            'price'          => $order->price_after_discount?? $order->price,
-            'vat'            =>($order->total_cost * $order->vat)/100,
-            'waiting_price'  => $order->waiting_price,
-            'total_cost'     => $order->total_cost,
-            'distance'       => $order->drive_distance,
-            'payment_way'    => $order->payment_way,
-            'duration'       => str_replace('after', '',$finish_time->diffForHumans($start_time))
-
+          $driver = $order->driver;
+          return [
+               'drive_id'       => $order->id,
+               'driver_name'    => $driver?->name,
+               'image'          => $driver?->getFirstMediaUrl('drivers-images'),
+               'metal_numbers'  => $driver?->vehicleDoc?->metal_plate_numbers,
+               'address'        => $driver?->address,
+               'average_rate'   => round($driver?->reviews?->avg('rate'),1),
+               'start_address'  => $order->orderDetails?->start_address,
+               'end_address'    => $order->orderDetails?->end_address,   
             ];
-
-        return $second_array;
         }
+
+        if($this->type == 'index')
+        {
+          return [
+            'end_latitude'  => $order->orderDetails->end_latitude,
+            'end_longitude' => $order->orderDetails->end_longitude,
+            'end_address'    => $order->orderDetails->end_address,   
+            'price'          => $order->price_after_discount?? $order->price,
+            'created_at'    => Carbon::parse($order->created_at)->format('M d, Y H:i A')
+          ];
+        }
+
 
         return $array;
     }

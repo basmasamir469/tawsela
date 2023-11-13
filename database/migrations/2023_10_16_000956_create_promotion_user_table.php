@@ -14,7 +14,6 @@ class CreatePromotionUserTable extends Migration {
 			$table->timestamps();
 			$table->integer('promotion_id')->unsigned();
 			$table->BigInteger('user_id')->unsigned();
-			$table->integer('order_id')->unsigned();
 		});
 	}
 

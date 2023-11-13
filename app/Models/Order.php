@@ -17,10 +17,12 @@ class Order extends Model
     Const CANCELLED      = 0;
     Const PENDING        = 1;
     Const ACCEPTED       = 2;
-    Const STARTED        = 3;
-    Const INWAY          = 4;
-    Const FINISHED       = 5;
-    Const COMPLETED      = 6;
+    Const ARRIVED        = 3;
+    Const STARTED        = 4;
+    Const INWAY          = 5;
+    Const FINISHED       = 6;
+    Const COMPLETED      = 7;
+    
 
     public function user()
     {
@@ -79,7 +81,7 @@ class Order extends Model
             }
             if(request('filter') == 'week')
             {
-              return $q->whereBetween('orders.created_at',[Carbon::now()->startOfWeek(),Carbon::now()->endOfWeek()]);
+              return $q->whereBetween('orders.created_at',[Carbon::now()->startOfWeek(Carbon::SATURDAY),Carbon::now()->endOfWeek(Carbon::FRIDAY)]);
             }
             if(request('filter') == 'month')
             {
@@ -87,5 +89,32 @@ class Order extends Model
             }
           });
 
+    }
+
+    public function driveInvoice()
+    {
+      return $this->hasOne('App\Models\DriveInvoice');
+    }
+
+    public function scopeFilterByStatus($q)
+    {
+       return $q->when(request('filter'),function() use($q){
+
+         if(request('filter') == 'incoming')
+         {
+          return $q->where('order_status',Self::ACCEPTED);
+         }
+
+         if(request('filter') == 'cancelled')
+         {
+          return $q->where('order_status',Self::CANCELLED);
+         }
+
+         if(request('filter') == 'completed')
+         {
+          return $q->where('order_status',Self::COMPLETED);
+         }
+
+       });
     }
 }

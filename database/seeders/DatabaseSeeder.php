@@ -22,11 +22,12 @@ class DatabaseSeeder extends Seeder
         $this->Call(CarBrandSeeder::class);
         $this->Call(SettingSeeder::class);
         $admin = User::create([
-             'name'      => 'admin',
-             'email'     => 'admin@admin.com',
-             'password'  => Hash::make(123456),
-             'phone'     => '01000122737',
-             'address'   => 'egypt'
+             'name'              => 'admin',
+             'email'             => 'admin@admin.com',
+             'password'          => Hash::make(123456),
+             'phone'             => '01000122737',
+             'address'           => 'egypt',
+             'is_active_email'   =>1
          ]);
         $role = Role::where('name','admin')->first();
         $admin->assignRole($role);

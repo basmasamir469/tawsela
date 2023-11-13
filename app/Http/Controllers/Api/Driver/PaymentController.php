@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\drivers\PaymentRequest;
 use Srmklive\PayPal\Services\ExpressCheckout;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Stripe\Stripe;
 
 class PaymentController extends Controller
@@ -15,19 +16,19 @@ class PaymentController extends Controller
       try{
         $data = $request->validated();
         $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET'));
-        $card = $stripe->tokens->create([
-            'card' => [
-              'number' => $data['card-number'] ,
-              'exp_month' => $data['exp-month'],
-              'exp_year' => $data['exp-year'],
-              'cvc' => $data['cvc'],
-            ],
-         ]);
+           $card = $stripe->tokens->create([
+               'card' => [
+                 'number' => $data['card-number'] ,
+                 'exp_month' => $data['exp-month'],
+                 'exp_year' => $data['exp-year'],
+                 'cvc' => $data['cvc'],
+               ],
+            ]);
         Stripe::setApiKey(env('STRIPE_SECRET'));
         $response = $stripe->charges->create([
-          'amount' => (int)$request->user()->debit,
+          'amount' =>(float) $request->user()->debit,
           'currency' => 'usd',
-          'source' => 'tok_visa',
+          'source' => $card->id,
           'description' => $data['description'],
         ]);
        $request->user()->update([

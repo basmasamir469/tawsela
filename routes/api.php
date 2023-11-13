@@ -33,6 +33,10 @@ Route::group(['prefix'=>'v1','namespace'=>'Api'],function(){
         Route::post('logout','AuthController@logout');
         Route::post('submit-token','AuthController@submitToken');
         Route::post('update-profile','AuthController@updateProfile');
+        Route::post('voice-alert','MainController@voiceAlert');
+        Route::post('activate-notifications','MainController@activateNotifications');
+        Route::post('my-profile','MainController@profile');
+
 
         Route::group(['namespace'=>'Driver','middleware'=>'role:driver'],function(){
 
@@ -49,22 +53,24 @@ Route::group(['prefix'=>'v1','namespace'=>'Api'],function(){
             Route::get('driver-details','DriverController@show');
             Route::get('pending-orders','OrderController@pendingOrders');
             Route::get('phone-call/{order_id}','OrderController@call');
-            Route::post('cancel-order/{order_id}','OrderController@cancelOrder');
+            Route::post('drivers/cancel-order/{order_id}','OrderController@cancelOrder');
+
             Route::get('accept-order/{order_id}','OrderController@acceptOrder');
+            Route::get('arrived/{order_id}','OrderController@arrived');
             Route::get('start-drive/{order_id}','OrderController@startDrive');
             Route::post('finish-drive/{order_id}','OrderController@finishDrive');
             Route::get('complete-drive/{order_id}','OrderController@completeDrive');
+
             Route::get('order-details/{id}','OrderController@show');
             Route::get('drives-dates','DriverController@drivesDates');
             Route::get('drives','DriverController@drives');
-            Route::get('finished-drive/{order_id}','OrderController@showFinishedDrive');
-            Route::post('voice-alert','DriverController@voiceAlert');
-            Route::post('activate-notifications','DriverController@activateNotifications');
+            Route::get('drive-invoice/{order_id}','OrderController@showDriveInvoice');
             Route::get('my-wallet','DriverController@myWallet');
+            Route::get('driver-notifications','DriverController@notifications');
 
         });
         
-            Route::post('payment','PaymentController@stripe')->name('payment.store');
+            Route::post('stripe','PaymentController@stripe')->name('payment.store');
         });
 
 
@@ -72,8 +78,19 @@ Route::group(['prefix'=>'v1','namespace'=>'Api'],function(){
 
             Route::post('addresses','AddressController@store');
             Route::get('addresses','AddressController@index');
+            Route::patch('addresses/{id}','AddressController@update');
+
             Route::get('drive-vehicles','OrderController@driveVehicles');
+
             Route::post('make-order','OrderController@makeOrder');
+            Route::post('users/cancel-order/{order_id}','OrderController@cancelOrder');
+            Route::get('my-drives','OrderController@index');
+            Route::get('drive-details/{id}','OrderController@show');
+
+            Route::post('make-review/{driver_id}','UserController@makeReview');
+            Route::get('user-notifications','UserController@notifications');
+            Route::get('apply-promotion/{promotion_id}','UserController@applyPromotion');
+            
         });
 
     });

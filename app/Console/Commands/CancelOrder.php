@@ -27,7 +27,7 @@ class CancelOrder extends Command
     public function handle()
     {
         Order::where('order_status',Order::PENDING)
-              ->whereRaw("TIMESTAMPDIFF(MINUTE,created_at, NOW())>5")
+              ->whereRaw("TIMESTAMPDIFF(MINUTE,created_at, NOW())>120")
               ->update([
                 'order_status' => Order::CANCELLED
               ]);

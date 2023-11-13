@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
         // if($this->app->environment('production')) {
         //     URL::forceScheme('https');
         // }
-
+    
         if(!$this->app->request->is('api/*')){
             request()->headers->set('Accept-Language','ar-sa,ar:q=0.9');
         }

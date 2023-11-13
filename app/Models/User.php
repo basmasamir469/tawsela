@@ -87,7 +87,7 @@ class User extends Authenticatable implements HasMedia
 
     public function promotions()
     {
-        return $this->belongsToMany('App\Models\Promotion');
+        return $this->belongsToMany('App\Models\Promotion','promotion_user','user_id','promotion_id');
     }
     public function getOrdersCountAttribute()
     {
@@ -109,15 +109,15 @@ class User extends Authenticatable implements HasMedia
         return $this->hasMany('App\Models\Token');
     }
 
-    public function driverNotifications()
+    public function globalNotifications()
     {
-        return $this->belongsToMany('App\Models\Notification','driver_notification','driver_id','notification_id');
+        return $this->belongsToMany('App\Models\Notification','notification_user','user_id','notification_id');
     }
 
-    public function userNotifications()
-    {
-        return $this->hasMany('App\Models\Notification');
-    }
+    // public function userNotifications()
+    // {
+    //     return $this->hasMany('App\Models\Notification');
+    // }
 
     public function getDriverDistanceAttribute()
     {
@@ -147,5 +147,10 @@ class User extends Authenticatable implements HasMedia
                        ->where(DB::raw("ROUND((degrees(acos(sin(radians($picker->latitude)) * sin(radians(order_details.start_latitude)) +  cos(radians($picker->latitude)) * cos(radians(order_details.start_latitude)) * cos(radians($picker->longitude-order_details.start_longitude)))) * 60 * 1.1515) * 1.609344 , 2)"),'<',100);
         return $orders;
     }
+
+   public function reviews()
+   {
+      return $this->hasMany('App\Models\Review','driver_id');
+   }
 
 }

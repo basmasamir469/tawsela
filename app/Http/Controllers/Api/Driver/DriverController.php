@@ -17,6 +17,7 @@ use App\Transformers\CarBrandTransformer;
 use App\Transformers\CarColorTransformer;
 use App\Transformers\CarTypeTransformer;
 use App\Transformers\DriverTransformer;
+use App\Transformers\NotificationTransformer;
 use App\Transformers\OrderTransformer;
 use App\Transformers\WalletTransformer;
 use Carbon\Carbon;
@@ -169,7 +170,9 @@ class DriverController extends Controller
 
     public function currentLocation(Request $request)
     {
-        $request->user()->pickers()->create([
+        Picker::updateOrCreate([
+           'user_id'=>$request->user()->id
+        ],[
           'latitude' =>  $request->latitude,
           'longitude'=> $request->longitude,
         ]);
@@ -210,31 +213,38 @@ class DriverController extends Controller
         return $this->dataResponse($orders,'all drives',200);     
     }
 
-    public function voiceAlert(Request $request)
-    {
-       $user =  $request->user();
-       $user->update([
-             'voice_alert'=> $user->voice_alert? 0 : 1
-        ]);
-       $message = $user->voice_alert? __('voice alert on'):__('voice alert off');
-        return $this->dataResponse(null,$message,200);     
-    }
-
-    public function activateNotifications(Request $request)
-    {
-        $user = $request->user();
-        $user ->update([
-            'notify_status' => $user->notify_status? 0 : 1
-        ]);
-        $message = $user->notify_status? __('receive notifications on'):__('receive notifications off');
-        return $this->dataResponse(null,$message,200);     
-    }
-
     public function myWallet(Request $request)
     {
-        $wallet = auth()->user();
-        $wallet = fractal($wallet,new WalletTransformer())->toArray();
+        $user = $request->user();
+        $orders = $user->driverOrders()->filterByDate()->get();
+        $pending_orders = $user->pendingOrders()->filterByDate()->count();
+        $cancelled_orders = $orders->where('order_status',Order::CANCELLED)->count();
+        $completed_orders = $orders->where('order_status',Order::COMPLETED)->count();
+        // $unapproved_orders = $user->unapprovedOrders()->filterByDate()->count();
+        $accepted_orders = $orders->whereIn('order_status',[Order::ACCEPTED,Order::STARTED,Order::FINISHED,Order::COMPLETED,Order::INWAY])->count();
+        $acceptance_rate = ($pending_orders+$accepted_orders+$cancelled_orders) == 0 ? 0 : round(($accepted_orders/($pending_orders+$accepted_orders+$cancelled_orders))*100,1);
 
-        return $this->dataResponse($wallet,('my wallet'),200);
+        return $this->dataResponse([
+            'total_cost'         =>$orders->sum('total_cost'),
+            'accepted_orders'    =>$accepted_orders,
+            'cancelled_orders'   =>$cancelled_orders,
+            'completed_orders'   =>$completed_orders,
+            'acceptance rate'    =>$acceptance_rate .'%'
+        ],('my wallet'),200);
+    }
+
+    public function notifications(Request $request)
+    { 
+        $skip = $request->skip? $request->skip :0;
+        $take = $request->take? $request->take :10;
+        $notifications = $request->user()->globalNotifications()
+                                         ->latest()
+                                         ->skip($skip)->take($take)
+                                         ->get();
+        $notifications = fractal()
+        ->collection($notifications)
+        ->transformWith(new NotificationTransformer())
+        ->toArray();
+        return $this->dataResponse($notifications,'notifications',200);     
     }
 }

@@ -2,12 +2,9 @@
 
 namespace App\Transformers;
 
-use App\Models\Order;
-use App\Models\User;
-use Carbon\Carbon;
 use League\Fractal\TransformerAbstract;
 
-class WalletTransformer extends TransformerAbstract
+class PromotionTransformer extends TransformerAbstract
 {
     /**
      * List of resources to automatically include
@@ -32,7 +29,10 @@ class WalletTransformer extends TransformerAbstract
      *
      * @return array
      */
-    public function transform(User $user)
+    public function transform()
     {
+        return [
+            //
+        ];
     }
 }

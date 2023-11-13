@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('driver_notification', function (Blueprint $table) {
+        Schema::create('notification_user', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('driver_id')->unsigned();
+            $table->bigInteger('user_id')->unsigned();
             $table->integer('notification_id')->unsigned();
-            $table->foreign('driver_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('notification_id')->references('id')->on('notifications')->onDelete('cascade');
             $table->timestamps();
         });

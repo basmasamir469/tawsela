@@ -22,10 +22,10 @@ class PaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'card-number' =>'required',
-            'exp-month'   =>'required',
-            'exp-year'    =>'required',
-            'cvc'         =>'required',
+             'card-number' =>'required',
+             'exp-month'   =>'required',
+             'exp-year'    =>'required',
+             'cvc'         =>'required',
             'description' =>'nullable',
             // 'amount'      =>'required'
         ];
