@@ -30,10 +30,7 @@ class LicenseAlert extends Command
         User::whereHas('vehicleDoc',function($q){
             return $q->whereRaw("DATEDIFF(license_expire_date,Now())<3");
         })->chunk(10,function($drivers){
-            dd($drivers->pluck('id'));
-             foreach ($drivers as $driver) {
              dispatch(new SendLicenseAlert($drivers));
-             }
         });
     }
 }

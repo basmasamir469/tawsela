@@ -14,7 +14,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
        $schedule->command('app:new-day')->daily()->at('00:00');
-       $schedule->command('app:license-alert')->daily()->at('12:18');
+       $schedule->command('app:license-alert')->daily()->at('13:41');
        $schedule->command('app:amounts-duo')->daily()->at('10:51');
        $schedule->command('app:cancel-order')->hourly();
     }
