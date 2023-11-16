@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', 'SocialController@home');
 
 Route::get('login/{provider}', 'SocialController@redirectToProvider');
 Route::get('login/{provider}/callback', 'SocialController@handleProviderCallback');

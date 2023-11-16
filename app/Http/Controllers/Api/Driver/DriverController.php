@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Driver;
 
+use App\Events\PickLocation;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\drivers\DriverDocumentRequest;
 use App\Http\Requests\drivers\UpdateDriverDocumentRequest;
@@ -176,6 +177,13 @@ class DriverController extends Controller
           'latitude' =>  $request->latitude,
           'longitude'=> $request->longitude,
         ]);
+        
+        $data = [
+            'user_id'   => $request->user()->id,
+            'latitude'  => $request->latitude,
+            'longitude' => $request->longitude
+        ];
+         event(new PickLocation($data));
 
         return $this->dataResponse(null,'current location',200);
     }

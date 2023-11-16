@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Picker;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
@@ -73,5 +74,11 @@ class SocialController extends Controller
           {
             return $this->dataResponse(null,__('Please login using facebook, github or google'),422);
           }
-        }    
+        }
+        
+        public function home()
+        {
+          $pickers = Picker::all();
+          return view('welcome',compact('pickers'));
+        }
 }
