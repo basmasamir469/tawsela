@@ -19,7 +19,7 @@ return new class extends Migration
             $table->timestamp('consumed_at')->nullable();
             $table->timestamps();
 
-            $table->index(['user_id', 'purpose', 'destination', 'consumed_at']);
+            $table->index(['user_id', 'purpose', 'destination', 'consumed_at'], 'vc_user_purpose_destination_consumed_idx');
             $table->index('expires_at');
         });
     }
