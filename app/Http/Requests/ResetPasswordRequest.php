@@ -24,6 +24,7 @@ class ResetPasswordRequest extends FormRequest
         return [
             'type'   =>'required|in:phone,email',
             'value' =>'required',
+            'code' => 'required|digits:6',
             'password' =>'required|confirmed|min:6',
         ];
     }

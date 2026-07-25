@@ -23,12 +23,14 @@ trait SendSms
         );
         
         $message = $response->current();
+
+        return $message;
         
-        if ($message->getStatus() == 0) {
-            echo "The message was sent successfully\n";
-        } else {
-            echo "The message failed with status: " . $message->getStatus() . "\n";
-        }
+        // if ($message->getStatus() == 0) {
+        //     echo "The message was sent successfully\n";
+        // } else {
+        //     echo "The message failed with status: " . $message->getStatus() . "\n";
+        // }
         // $config = Configuration::getDefaultConfiguration()->setApiKey('api-key', env('BREVO_API_KEY'));
 
         // $apiInstance = new TransactionalSMSApi(

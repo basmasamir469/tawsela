@@ -22,8 +22,9 @@ class CheckResetPasswordCodeRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'type'   =>'required|in:phone,email',
             'value'   =>'required',
-            'code' =>'required',
+            'code' =>'required|digits:6',
         ];
     }
 }

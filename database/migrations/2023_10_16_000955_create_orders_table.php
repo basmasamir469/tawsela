@@ -13,7 +13,7 @@ class CreateOrdersTable extends Migration {
 			$table->increments('id');
 			$table->timestamps();
 			$table->BigInteger('user_id')->unsigned();
-			$table->integer('promotion_id')->nullable();
+			$table->unsignedInteger('promotion_id')->nullable();
 			$table->decimal('total_cost')->nullable();
 			$table->decimal('price')->nullable();
 			$table->BigInteger('driver_id')->unsigned()->nullable();

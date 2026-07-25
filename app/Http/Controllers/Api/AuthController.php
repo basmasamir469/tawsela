@@ -12,13 +12,13 @@ use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Requests\users\TokenRequest;
 use App\Mail\VerifyEmail;
-use App\Models\ActivationProcess;
 use App\Models\Notification;
 use App\Models\Token;
 use App\Models\User;
+use App\Models\VerificationChallenge;
+use App\Services\Auth\VerificationChallengeService;
 use App\Traits\SendSms;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -31,8 +31,10 @@ class AuthController extends Controller
 
     // register 
 
-    public function register(RegisterRequest $request)
+    public function register(RegisterRequest $request, VerificationChallengeService $challenges)
     {
+      try{
+
         $data = $request->validated();
         $password = Hash::make($data['password']);
         DB::beginTransaction();
@@ -59,48 +61,49 @@ class AuthController extends Controller
            }
  
         $user->assignRole($role);     
-        $code = rand(11111,99999);
-        $act_process = ActivationProcess::create([
-           'code' => $code,
-           'status' => 0 ,
-           'type'   =>'phone',
-           'value'  => $user->phone,
-        ]);
+        $code = $challenges->issue(
+            $user,
+            VerificationChallenge::PURPOSE_PHONE_VERIFICATION,
+            $user->phone
+        );
 
         DB::commit();
 
         // send sms
-        $this->sendSms($user->phone,$act_process->code);
+        $message = $this->sendSms($user->phone, $code);
+
+        if($message->getStatus() != 0)
+        {
+          return $this->dataResponse(null,__('faild to send activation code! please try again'),422);
+        }
 
        return $this->dataResponse(null,__('registered successfully! activation code has been sent to your phone number'),200);
+      } catch(\Exception $e)
+      {
+        DB::rollBack();
+        return $this->dataResponse(null,$e->getMessage(),422);
+      }
     }
 
     // enter code to activate account 
 
-    public function verifyUser(CheckCodeRequest $request)
+    public function verifyUser(CheckCodeRequest $request, VerificationChallengeService $challenges)
     {
         $data = $request->validated();
 
-        // type for email or mobile 
-        $code = ActivationProcess::where(['type'=>$data['type'],'value'=>$data['value'],'code'=>$data['code'],'status'=>0])->first();
-        if($code)
-        {
-            DB::beginTransaction();
-            $user = User::where($data['type'],$data['value'])->first();
-            $data['type'] == 'email' ? $user->update(['is_active_email'=>1]) : $user->update(['is_active_phone'=>1]);
+        $user = User::where($data['type'], $data['value'])->first();
+        $purpose = $data['type'] === 'email'
+            ? VerificationChallenge::PURPOSE_EMAIL_VERIFICATION
+            : VerificationChallenge::PURPOSE_PHONE_VERIFICATION;
 
-            $code->update([
-                'status' =>1
-            ]);
-            ActivationProcess::where(['type'=>$data['type'],'value'=>$data['value'],'status'=>0])->delete();
-            DB::commit();
-            Auth::login($user);
-            $auth_user = $request->user();
-            $token = $auth_user->createToken("TAWSELA")->plainTextToken;
-            if($auth_user->hasRole('driver'))
+        if($user && $challenges->verifyAndConsume($user, $purpose, $data['value'], $data['code']))
+        {
+            $data['type'] == 'email' ? $user->update(['is_active_email'=>1]) : $user->update(['is_active_phone'=>1]);
+            $token = $user->createToken("TAWSELA")->plainTextToken;
+            if($user->hasRole('driver'))
             {
               $notification = Notification::create([
-                'user_id' => $auth_user->id,
+                'user_id' => $user->id,
                 'en'=>['title'=>'A special welcome bonus for you ! ','description'=>'welcome to our application'],
                 'ar'=>['title'=>' ! بونص ترحيبي خاص  بك ','description'=>'مرحبا بك في تطبيقنا']
             ]);
@@ -108,8 +111,10 @@ class AuthController extends Controller
               'title'=>$notification->title,
               'body' =>$notification->description
             ];
-             $submit_token = Token::where('user_id',auth()->user()->id)->first();
-             $this->notifyByFirebase([$submit_token->token],$data,$submit_token->device_type);
+             $submit_token = Token::where('user_id', $user->id)->first();
+             if ($submit_token) {
+               $this->notifyByFirebase([$submit_token->token], $data, $submit_token->device_type);
+             }
             }
             return $this->dataResponse(['token'=>$token],__('your account is activated successfully!'),200); 
         }
@@ -120,12 +125,13 @@ class AuthController extends Controller
 
     // login after after activation
 
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request, VerificationChallengeService $challenges)
     {
         $data = $request->validated();
-        if(Auth::attempt([$data['type'] => $data['value'], 'password' => $data['password']]))
+        $user = User::where($data['type'], $data['value'])->first();
+
+        if($user && $user->password && Hash::check($data['password'], $user->password))
         {
-           $user = $request->user();
            $activated = $data['type']=='email'? $user->is_active_email: $user->is_active_phone;
 
               if($activated)
@@ -133,13 +139,10 @@ class AuthController extends Controller
                 $token = $user->createToken("TAWSELA")->plainTextToken;
                 return $this->dataResponse(['activation'=>$user->is_active_phone , 'token'=>$token],__('logged in successfully'),200);
               }
-              $code = rand(11111,99999);
-              $act_process = ActivationProcess::create([
-                'code' => $code,
-                'status' => 0 ,
-                'type'   => $data['type'],
-                'value'  => $data['value'],
-             ]);
+              $purpose = $data['type'] === 'email'
+                ? VerificationChallenge::PURPOSE_EMAIL_VERIFICATION
+                : VerificationChallenge::PURPOSE_PHONE_VERIFICATION;
+              $code = $challenges->issue($user, $purpose, $data['value']);
 
              if($data['type'] == 'email')
              {
@@ -149,7 +152,7 @@ class AuthController extends Controller
              }
              else
              {
-              $this->sendSms($user->phone,$act_process->code);
+              $this->sendSms($user->phone, $code);
              }
            return $this->dataResponse(['activation'=>0], __('your account has not activated yet, activation code has been sent to your phone!'),422);
          }
@@ -158,14 +161,17 @@ class AuthController extends Controller
 
         // forget password 
 
-        public function forgetPassword(ForgetPasswordRequest $request)
+        public function forgetPassword(ForgetPasswordRequest $request, VerificationChallengeService $challenges)
         {
             $data = $request->validated();
             $driver = User::where($data['type'],$data['value'])->first();
             if($driver)
             {
-                $token = rand(11111,99999);
-                DB::table('password_reset_tokens')->insert(['value'=>$data['value'],'token'=>$token]);
+                $token = $challenges->issue(
+                    $driver,
+                    VerificationChallenge::PURPOSE_PASSWORD_RESET,
+                    $data['value']
+                );
                 if($data['type'] == 'email')
                 {
                   Mail::to($driver->email)
@@ -182,11 +188,12 @@ class AuthController extends Controller
         }
 
         // enter code to reset password
-        public function checkResetPasswordCode(CheckResetPasswordCodeRequest $request)
+        public function checkResetPasswordCode(CheckResetPasswordCodeRequest $request, VerificationChallengeService $challenges)
         {
             $data = $request->validated();
-            $code = DB::table('password_reset_tokens')->where(['value'=>$data['value'],'token'=>$data['code']])->first();
-            if($code){
+            $user = User::where($data['type'], $data['value'])->first();
+
+            if($user && $challenges->isValid($user, VerificationChallenge::PURPOSE_PASSWORD_RESET, $data['value'], $data['code'])){
              return $this->dataResponse(null,__('code is valid'),200);
             }
              return $this->dataResponse(null,__('code is invalid'),422);
@@ -195,21 +202,33 @@ class AuthController extends Controller
        
         // reset password 
 
-        public function resetPassword(ResetPasswordRequest $request)
+        public function resetPassword(ResetPasswordRequest $request, VerificationChallengeService $challenges)
         {
             $data = $request->validated();
             $driver = User::where($data['type'],$data['value'])->first();
-            if($driver){
-                $password = Hash::make($data['password']);
+            $resetSucceeded = $driver && DB::transaction(function () use ($data, $driver, $challenges) {
+                if (! $challenges->verifyAndConsume(
+                    $driver,
+                    VerificationChallenge::PURPOSE_PASSWORD_RESET,
+                    $data['value'],
+                    $data['code']
+                )) {
+                    return false;
+                }
+
                 $driver->update([
-                  'password' => $password
+                    'password' => Hash::make($data['password'])
                 ]);
 
-              DB::table('password_reset_tokens')->where('value',$data['value'])->delete();
-                
+                $driver->tokens()->delete();
+
+                return true;
+            });
+
+            if($resetSucceeded){
              return $this->dataResponse(null,__('password is updated successfully'),200);
             }
-             return $this->dataResponse(null,__('credentials are not correct please try again'),422);
+             return $this->dataResponse(null,__('reset code is invalid'),422);
 
         }
 

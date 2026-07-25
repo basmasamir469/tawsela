@@ -116,4 +116,9 @@ return [
 
     'password_timeout' => 10800,
 
+    'verification' => [
+        'code_expiry' => env('AUTH_VERIFICATION_CODE_EXPIRY', 10),
+        'max_attempts' => env('AUTH_VERIFICATION_MAX_ATTEMPTS', 5),
+    ],
+
 ];

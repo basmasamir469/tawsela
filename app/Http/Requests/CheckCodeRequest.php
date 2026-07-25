@@ -24,7 +24,7 @@ class CheckCodeRequest extends FormRequest
         return [
             'type'   =>'required|in:email,phone',
             'value'  =>'required',
-            'code'   =>'required',
+            'code'   =>'required|digits:6',
         ];
     }
 }
