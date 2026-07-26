@@ -24,6 +24,7 @@ Route::group(['prefix'=>'v1','namespace'=>'Api'],function(){
     Route::post('register','AuthController@register');
     Route::post('verify-user','AuthController@verifyUser');
     Route::post('login','AuthController@login');
+    Route::post('social-login','SocialAuthController@login');
     Route::post('forget-password','AuthController@forgetPassword');
     Route::post('reset-password/checkcode','AuthController@checkResetPasswordCode');
     Route::post('reset-password','AuthController@resetPassword');
