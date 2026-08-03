@@ -25,7 +25,9 @@ class LoginRequest extends FormRequest
         return [
             'type'   =>'required|in:email,phone',
             'value'  =>'required'.$rule,
-            'password'=>'required'
+            'password'=>'required',
+             'device_id' => 'required',
+            'device_type' => 'required|in:ios,android',
         ];
     }
 }

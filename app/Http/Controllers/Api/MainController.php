@@ -34,5 +34,7 @@ class MainController extends Controller
         $profile = fractal($profile,new ProfileTransformer())->toArray();
         return $this->dataResponse($profile,__('my profile'),200);     
     }
+
+   
     
 }

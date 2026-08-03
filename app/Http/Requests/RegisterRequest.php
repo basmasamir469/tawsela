@@ -26,7 +26,9 @@ class RegisterRequest extends FormRequest
             'phone'   =>'required|regex:/(01)[0-9]{9}/',
             'address' =>'required',
             'password'=>'confirmed|min:6',
-            'image'   =>'required'
+            'image'   =>'required',
+            'device_id' => 'required',
+            'device_type' => 'required|in:ios,android',
         ];
     }
 }

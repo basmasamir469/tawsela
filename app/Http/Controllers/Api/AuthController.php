@@ -45,22 +45,7 @@ class AuthController extends Controller
         if ($result) {
             $user = $result['user'];
             $token = $result['token'];
-            if($user->hasRole('driver'))
-            {
-              $notification = Notification::create([
-                'user_id' => $user->id,
-                'en'=>['title'=>'A special welcome bonus for you ! ','description'=>'welcome to our application'],
-                'ar'=>['title'=>' ! بونص ترحيبي خاص  بك ','description'=>'مرحبا بك في تطبيقنا']
-            ]);
-            $data =[
-              'title'=>$notification->title,
-              'body' =>$notification->description
-            ];
-             $submit_token = Token::where('user_id', $user->id)->first();
-             if ($submit_token) {
-               $this->notifyByFirebase([$submit_token->token], $data, $submit_token->device_type);
-             }
-            }
+            event(new \App\Events\UserVerified($user));
             return $this->dataResponse(['token'=>$token],__('your account is activated successfully!'),200); 
         }
             return $this->dataResponse(null,__('invalid code'),422); 
@@ -126,24 +111,11 @@ class AuthController extends Controller
 
         public function logout(Request $request)
         {
+            Token::where('device_id',$request->device_id)->delete();
           if($request->user()->currentAccessToken()->delete())
           {
             return $this->dataResponse(null,__('logged out successfully'),200);
           }
-        }
-
-        public function submitToken(TokenRequest $request)
-        {
-           $data = $request->validated();
-           Token::updateOrCreate(
-           ['device_id'     =>$data['device_id']],
-           [
-             'user_id'      =>$request->user()->id,
-             'device_type'  =>$data['device_type'],
-             'token'        =>$data['token']
-           ]);
-
-           return $this->dataResponse(null,__('token submitted successfully'),200);
         }
 
         public function updateProfile(UpdateProfileRequest $request , AuthService $auth)

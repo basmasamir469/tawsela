@@ -17,10 +17,11 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+ 
 
 
 Route::group(['prefix'=>'v1','namespace'=>'Api'],function(){
-
+    
     Route::post('register','AuthController@register');
     Route::post('verify-user','AuthController@verifyUser');
     Route::post('login','AuthController@login');
@@ -32,7 +33,6 @@ Route::group(['prefix'=>'v1','namespace'=>'Api'],function(){
     Route::group(['middleware'=>'auth:sanctum'],function(){
          
         Route::post('logout','AuthController@logout');
-        Route::post('submit-token','AuthController@submitToken');
         Route::post('update-profile','AuthController@updateProfile');
         Route::post('voice-alert','MainController@voiceAlert');
         Route::post('activate-notifications','MainController@activateNotifications');

@@ -3,9 +3,11 @@
 namespace App\Services\Auth;
 
 use App\Mail\VerifyEmail;
+use App\Models\Token;
 use App\Models\User;
 use App\Models\VerificationChallenge;
 use App\Traits\SendSms;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -40,6 +42,10 @@ class AuthService
             ])->first();
 
             $user->assignRole($role);
+
+            if ($user) {
+                $this->saveDeviceToken($user, $data);
+            }
 
             return [$user, $this->challenges->issue(
                 $user,
@@ -79,6 +85,8 @@ class AuthService
         if (! $user || ! $user->password || ! Hash::check($data['password'], $user->password)) {
             return null;
         }
+
+        $this->saveDeviceToken($user, $data);
 
         if ($user->{$this->activationColumn($data['type'])}) {
             return [
@@ -230,6 +238,21 @@ class AuthService
 
         $model->clearMediaCollection($collection);
         $model->addMedia($media)->toMediaCollection($collection);
+    }
+
+    private function saveDeviceToken(User $user, array $data): void
+    {
+        if (! $data['device_id'] || ! $data['device_type']) {
+            return;
+        }
+
+        Token::updateOrCreate(
+            ['device_id' => $data['device_id']],
+            [
+                'user_id' => $user->id,
+                'device_type' => $data['device_type'],
+            ]
+        );
     }
 
 

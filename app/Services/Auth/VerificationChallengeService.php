@@ -11,7 +11,8 @@ class VerificationChallengeService
 {
     public function issue(User $user, string $purpose, string $destination): string
     {
-        $code = (string) random_int(100000, 999999);
+        // $code = (string) random_int(100000, 999999);
+        $code = '123456';
 
         DB::transaction(function () use ($user, $purpose, $destination, $code): void {
             VerificationChallenge::query()

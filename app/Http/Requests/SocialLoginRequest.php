@@ -23,7 +23,8 @@ class SocialLoginRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         if ($this->has('provider')) {
-            $this->merge([ 'provider' => strtolower($this->input('provider')) ]);
+            $this->merge([ 'provider' => strtolower($this->input('provider')) ,
+                           'role'     => $this->header('X-Role', 'user')]);
         }
     }
 }
