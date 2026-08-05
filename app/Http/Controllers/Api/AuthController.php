@@ -10,23 +10,24 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\UpdateProfileRequest;
-use App\Http\Requests\users\TokenRequest;
 use App\Mail\VerifyEmail;
-use App\Models\Notification;
 use App\Models\Token;
-use App\Models\User;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
-    // register 
+    protected AuthService $auth;
 
-    public function register(RegisterRequest $request, AuthService $auth)
+    public function __construct(AuthService $auth)
+    {
+        $this->auth = $auth;
+    }
+
+    public function register(RegisterRequest $request)
     {
         try {
-            if (! $auth->register($request->validated(), $request->header('X-Role', 'user'))) {
+            if (! $this->auth->register($request->validated(), $request->header('X-Role', 'user'))) {
                 return $this->dataResponse(null, __('faild to send activation code! please try again'), 422);
             }
 
@@ -36,28 +37,24 @@ class AuthController extends Controller
         }
     }
 
-    // enter code to activate account 
-
-    public function verifyUser(CheckCodeRequest $request, AuthService $auth)
+    public function verifyUser(CheckCodeRequest $request)
     {
-        $result = $auth->verifyUser($request->validated());
+        $result = $this->auth->verifyUser($request->validated());
 
         if ($result) {
             $user = $result['user'];
             $token = $result['token'];
             event(new \App\Events\UserVerified($user));
-            return $this->dataResponse(['token'=>$token],__('your account is activated successfully!'),200); 
+
+            return $this->dataResponse(['token' => $token], __('your account is activated successfully!'), 200);
         }
-            return $this->dataResponse(null,__('invalid code'),422); 
 
-
+        return $this->dataResponse(null, __('invalid code'), 422);
     }
 
-    // login after after activation
-
-    public function login(LoginRequest $request, AuthService $auth)
+    public function login(LoginRequest $request)
     {
-        $result = $auth->login($request->validated());
+        $result = $this->auth->login($request->validated());
 
         if (! $result) {
             return $this->dataResponse(null, __('faild to login! phone or password does not meet our credentials'), 422);
@@ -73,63 +70,53 @@ class AuthController extends Controller
         return $this->dataResponse(['activation' => 0], __('your account has not activated yet, activation code has been sent to your phone!'), 422);
     }
 
-        // forget password 
-
-        public function forgetPassword(ForgetPasswordRequest $request, AuthService $auth)
-        {
-            if ($auth->sendPasswordResetCode($request->validated())) {
-                return $this->dataResponse(null, __('we have sent reset password code to you'), 200);
-            }
-
-            return $this->dataResponse(null, __('credentials are not correct! please try again'), 422);
+    public function forgetPassword(ForgetPasswordRequest $request)
+    {
+        if ($this->auth->sendPasswordResetCode($request->validated())) {
+            return $this->dataResponse(null, __('we have sent reset password code to you'), 200);
         }
 
-        // enter code to reset password
-        public function checkResetPasswordCode(CheckResetPasswordCodeRequest $request, AuthService $auth)
-        {
-            if ($auth->isPasswordResetCodeValid($request->validated())) {
-                return $this->dataResponse(null, __('code is valid'), 200);
-            }
+        return $this->dataResponse(null, __('credentials are not correct! please try again'), 422);
+    }
 
-            return $this->dataResponse(null, __('code is invalid'), 422);
-
-        }
-       
-        // reset password 
-
-        public function resetPassword(ResetPasswordRequest $request, AuthService $auth)
-        {
-            if ($auth->resetPassword($request->validated())) {
-                return $this->dataResponse(null, __('password is updated successfully'), 200);
-            }
-
-            return $this->dataResponse(null, __('reset code is invalid'), 422);
-
+    public function checkResetPasswordCode(CheckResetPasswordCodeRequest $request)
+    {
+        if ($this->auth->isPasswordResetCodeValid($request->validated())) {
+            return $this->dataResponse(null, __('code is valid'), 200);
         }
 
-        // logout
+        return $this->dataResponse(null, __('code is invalid'), 422);
+    }
 
-        public function logout(Request $request)
-        {
-            Token::where('device_id',$request->device_id)->delete();
-          if($request->user()->currentAccessToken()->delete())
-          {
-            return $this->dataResponse(null,__('logged out successfully'),200);
-          }
+    public function resetPassword(ResetPasswordRequest $request)
+    {
+        if ($this->auth->resetPassword($request->validated())) {
+            return $this->dataResponse(null, __('password is updated successfully'), 200);
         }
 
-        public function updateProfile(UpdateProfileRequest $request , AuthService $auth)
-        {
-            $data = $request->validated();
-            $user = $request->user();
-            
-            try {
-                $auth->updateProfile($user, $data);
-            } catch (\Exception $e) {
-                return $this->dataResponse(null, __('faild to update profile! please try again'), 422);
-            }
-            return $this->dataResponse(null, __('profile updated successfully'), 200);
+        return $this->dataResponse(null, __('reset code is invalid'), 422);
+    }
+
+    public function logout(Request $request)
+    {
+        \App\Models\Token::where('device_id', $request->device_id)->delete();
+
+        if ($request->user()->currentAccessToken()->delete()) {
+            return $this->dataResponse(null, __('logged out successfully'), 200);
+        }
+    }
+
+    public function updateProfile(UpdateProfileRequest $request)
+    {
+        $data = $request->validated();
+        $user = $request->user();
+
+        try {
+            $this->auth->updateProfile($user, $data);
+        } catch (\Exception $e) {
+            return $this->dataResponse(null, __('faild to update profile! please try again'), 422);
         }
 
-    
+        return $this->dataResponse(null, __('profile updated successfully'), 200);
+    }
 }
