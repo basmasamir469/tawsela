@@ -25,7 +25,7 @@ class AuthServiceCycleTest extends TestCase
             'guard_name' => 'api',
         ]);
 
-        $service = new AuthService(new VerificationChallengeService());
+        $service = app (AuthService::class);
 
         $payload = [
             'name' => 'Ahmed Ali',

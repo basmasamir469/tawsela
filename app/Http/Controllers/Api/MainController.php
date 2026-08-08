@@ -12,7 +12,7 @@ class MainController extends Controller
     {
        $user =  $request->user();
        $user->update([
-             'voice_alert'=> $user->voice_alert? 0 : 1
+             'voice_alert'=> !$user->voice_alert
         ]);
        $message = $user->voice_alert? __('voice alert on'):__('voice alert off');
         return $this->dataResponse(null,$message,200);     
@@ -22,7 +22,7 @@ class MainController extends Controller
     {
         $user = $request->user();
         $user ->update([
-            'notify_status' => $user->notify_status? 0 : 1
+            'notify_status' => !$user->notify_status
         ]);
         $message = $user->notify_status? __('receive notifications on'):__('receive notifications off');
         return $this->dataResponse(null,$message,200);     
