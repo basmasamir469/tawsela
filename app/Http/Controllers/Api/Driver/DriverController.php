@@ -255,4 +255,16 @@ class DriverController extends Controller
         ->toArray();
         return $this->dataResponse($notifications,'notifications',200);     
     }
+
+    public function updateLocation(Request $request)
+    {
+        $user = $request->user();
+        $user->pickers()->updateOrCreate([
+            'user_id' => $user->id
+        ], [
+            'latitude'  => $request->latitude,
+            'longitude' => $request->longitude
+        ]);
+        return $this->dataResponse(null,__('location updated successfully'),200);
+    }
 }

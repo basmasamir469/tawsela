@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Listeners;
 
@@ -37,7 +37,7 @@ class SendDriverWelcomeNotification
         ];
 
         foreach (Token::where('user_id', $user->id)->get() as $token) {
-            $this->notifyByFirebase([$token->device_id], $data, $token->device_type);
+            $this->notifyByFirebase([$token->token], $data, $token->device_type);
         }
     }
 }

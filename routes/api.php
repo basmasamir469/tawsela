@@ -51,6 +51,8 @@ Route::group(['prefix'=>'v1','namespace'=>'Api'],function(){
             Route::get('model-years','DriverController@modelYears');
             Route::post('activate','DriverController@activate');
             Route::post('current-location','DriverController@currentLocation');
+            Route::post('driver-location','DriverLocationController@update');
+            Route::post('driver-go-offline','DriverLocationController@goOffline');
             Route::get('driver-details','DriverController@show');
             Route::get('pending-orders','OrderController@pendingOrders');
             Route::get('phone-call/{order_id}','OrderController@call');

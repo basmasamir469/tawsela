@@ -17,12 +17,11 @@ class RoleSeeder extends Seeder
         DB::table('roles')->delete();
         $roles = ['user','driver','admin'];
 
-        foreach($roles as $role)
-        {
-            Role::create([
-                'name' =>$role,
-                'guard_name'=>'api'
-            ]);
-        }
+        Role::insert(array_map(fn($role) => [
+            'name' => $role,
+            'guard_name' => 'api',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ], $roles));
     }
 }

@@ -1,16 +1,16 @@
-﻿<?php
+<?php
 
 namespace App\Events;
 
-use App\Models\User;
+use App\Models\Order;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class UserVerified
+class OrderCreated
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public User $user)
+    public function __construct(public Order $order, public array $driverIds = [])
     {
     }
 }
