@@ -17,10 +17,8 @@ class DriverLocationService
      */
     public function updateLocation($driverId, $latitude, $longitude): bool
     {
-        // 1. حفظ اللوكيشن في الـ Geo Set (بيسمح بالـ geosearch)
         Redis::geoadd('drivers:locations', $longitude, $latitude, $driverId);
     
-        // 2. تتبع "آخر تحديث" في key منفصل، بـ TTL (زي فكرتك بالظبط، بس بغرض مختلف)
         Redis::setex("driver:last_seen:{$driverId}", 180, now()->toDateTimeString());
     
         return true;
