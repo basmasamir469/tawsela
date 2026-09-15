@@ -2,6 +2,10 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Driver\OrderController as DriverOrderController;
+
+Route::middleware(['auth:sanctum', 'role:driver', 'is_account_opened'])
+    ->post('driver/orders/{order}/reject', [DriverOrderController::class, 'reject']);
 
 /*
 |--------------------------------------------------------------------------

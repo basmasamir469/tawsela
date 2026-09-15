@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Setting;
 use App\Models\Token;
 use App\Models\User;
+use App\Enums\DriverAvailabilityStatus;
 use App\Traits\SendNotification;
 use App\Transformers\CarTypeTransformer;
 use App\Transformers\OrderTransformer;
@@ -90,6 +91,10 @@ class OrderService
 
                         $payload['order'] = $order;
                         $payload['driver_ids'] = $this->getNearestDriverIds($order, $data['start_latitude'], $data['start_longitude']);
+                        $order->driverOffers()->createMany(array_map(
+                            fn ($driverId) => ['driver_id' => $driverId],
+                            $payload['driver_ids']
+                        ));
 
                         return $next($payload);
                     },
@@ -166,6 +171,7 @@ class OrderService
         })->whereIn('users.id', $activeDriverIds)
             ->where('users.active_status', 1)
             ->where('users.account_status', 1)
+            ->availableForOffers()
             ->pluck('users.id')
             ->toArray();
     }
@@ -182,6 +188,7 @@ class OrderService
             'order_status' => Order::CANCELLED,
             'cancel_reason' => $data['cancel_reason'],
         ]);
+        $order->driver?->update(['availability_status' => DriverAvailabilityStatus::AVAILABLE]);
 
         $notification = Notification::create([
             'ar' => ['title' => 'تم إلغاء الطلب', 'description' => 'نأسف لإبلاغك أن الطلب تم إلغاؤه'],

@@ -34,6 +34,16 @@ class Order extends Model
         return $this->belongsTo('App\Models\User','driver_id');
     }
 
+    public function driverOffers()
+    {
+        return $this->hasMany(OrderDriverOffer::class);
+    }
+
+    public function driverRejections()
+    {
+        return $this->hasMany(OrderDriverRejection::class);
+    }
+
     public function orderDetails()
     {
         return $this->hasOne('App\Models\OrderDetail');

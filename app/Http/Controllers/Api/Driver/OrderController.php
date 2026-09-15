@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Driver;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\drivers\CancelOrderRequest;
+use App\Http\Requests\drivers\RejectOrderRequest;
+use App\Enums\DriverAvailabilityStatus;
 use App\Models\DriveInvoice;
 use App\Models\Notification;
 use App\Models\Order;
@@ -16,10 +18,22 @@ use Carbon\Carbon;
 use Vonage\Client ;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\Driver\DriverOrderService;
 use Vonage\Client\Credentials\Basic;
 
 class OrderController extends Controller
 {
+    public function __construct(protected DriverOrderService $driverOrderService)
+    {
+    }
+
+    public function reject(RejectOrderRequest $request, Order $order)
+    {
+        $this->driverOrderService->rejectOffer($request->user(), $order, $request->validated());
+
+        return $this->dataResponse(null, __('order is rejected successfully'), 201);
+    }
+
     public function pendingOrders()
     {
         $orders = auth()->user()->pendingOrders();
@@ -34,6 +48,10 @@ class OrderController extends Controller
     public function acceptOrder($id)
     {
        $order = Order::findOrFail($id);
+       if (auth()->user()->availability_status !== DriverAvailabilityStatus::AVAILABLE) {
+           return $this->dataResponse(null, __('driver is not available'), 422);
+       }
+
        if($order->order_status == Order::PENDING)
        {
         DB::beginTransaction();
@@ -41,6 +59,7 @@ class OrderController extends Controller
           'order_status'=>Order::ACCEPTED,
           'driver_id'   =>auth()->user()->id,
         ]);
+        auth()->user()->update(['availability_status' => DriverAvailabilityStatus::BUSY]);
         $notification = Notification::create([
             // 'user_id' => $order->user_id,
             'ar'      =>['title'=>'تم قبول طلبك','description'=>'من فضلك انتظر السائق في الطريق اليك'],
@@ -83,6 +102,7 @@ class OrderController extends Controller
               'order_status'   =>Order::CANCELLED,
               'cancel_reason'  =>$data['cancel_reason']
             ]);
+            $order->driver?->update(['availability_status' => DriverAvailabilityStatus::AVAILABLE]);
             $notification = Notification::create([
                // 'user_id' => $order->user_id,
                 'ar'      =>['title'=>' تم الغاء طلبك','description'=>' ناسف لابلاغك انه تم الغاء طلبك '],
@@ -176,6 +196,7 @@ class OrderController extends Controller
             $order->update([
               'order_status'=>Order::COMPLETED,
             ]);
+            $order->driver?->update(['availability_status' => DriverAvailabilityStatus::AVAILABLE]);
         
             return $this->dataResponse(null,__('drive is completed successfully'),200);
     

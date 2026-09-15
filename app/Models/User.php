@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DriverAvailabilityStatus;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use Carbon\Carbon;
@@ -54,6 +55,7 @@ class User extends Authenticatable implements HasMedia
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'availability_status' => DriverAvailabilityStatus::class,
     ];
     public function userOrders()
     {
@@ -63,6 +65,21 @@ class User extends Authenticatable implements HasMedia
     public function driverOrders()
     {
         return $this->hasMany('App\Models\Order','driver_id');
+    }
+
+    public function orderOffers()
+    {
+        return $this->hasMany(OrderDriverOffer::class, 'driver_id');
+    }
+
+    public function orderRejections()
+    {
+        return $this->hasMany(OrderDriverRejection::class, 'driver_id');
+    }
+
+    public function scopeAvailableForOffers($query)
+    {
+        return $query->where('availability_status', DriverAvailabilityStatus::AVAILABLE->value);
     }
 
     public function vehicleDoc()
@@ -139,13 +156,20 @@ class User extends Authenticatable implements HasMedia
 
     public function pendingOrders() 
     {
-        $vehicle_id = auth()->user()->vehicleDoc->car_type_id;
-        $picker     = Picker::where('user_id',auth()->user()->id)->latest()->first();          
+        $driverId   = $this->id;
+        $vehicle_id = $this->vehicleDoc->car_type_id;
+        $picker     = Picker::where('user_id', $driverId)->latest()->first();
         $orders     = Order::join('order_details','order_details.order_id','=','orders.id')
                        ->join('users','users.id','orders.user_id')
                        ->where(['orders.car_type_id'=>$vehicle_id,'orders.order_status'=>Order::PENDING])
+                       ->whereNotExists(function ($query) use ($driverId) {
+                           $query->selectRaw(1)
+                               ->from('order_driver_rejections')
+                               ->whereColumn('order_driver_rejections.order_id', 'orders.id')
+                               ->where('order_driver_rejections.driver_id', $driverId);
+                       })
                        ->where(DB::raw("ROUND((degrees(acos(sin(radians($picker->latitude)) * sin(radians(order_details.start_latitude)) +  cos(radians($picker->latitude)) * cos(radians(order_details.start_latitude)) * cos(radians($picker->longitude-order_details.start_longitude)))) * 60 * 1.1515) * 1.609344 , 2)"),'<',100);
-        return $orders;
+      return $orders;
     }
 
    public function reviews()
