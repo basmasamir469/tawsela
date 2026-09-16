@@ -34,9 +34,9 @@ class OrderController extends Controller
     public function makeOrder(OrderRequest $request)
     {
         try {
-            $this->orderService->makeOrder($request->user(), $request->validated());
-
-            return $this->dataResponse(null, __('order is sent successfully'), 200);
+            $result = $this->orderService->makeOrder($request->user(), $request->validated());
+            return $this->dataResponse($result, __('order is sent successfully'), 200);
+            
         } catch (\RuntimeException $e) {
             return $this->dataResponse(null, $e->getMessage(), 422);
         }
