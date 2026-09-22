@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use App\Factories\VerificationCodeDestinationFactory;
 use App\Mail\VerifyEmail;
 use App\Models\Token;
 use App\Models\User;
@@ -182,15 +183,9 @@ class AuthService
     {
         $code = $this->challenges->issue($user, $purpose, $destination);
 
-        if ($type === 'email') {
-            Mail::to($user->email)
-                ->bcc('basmaelazony@gmail.com')
-                ->send(new VerifyEmail($code));
+        $sender = VerificationCodeDestinationFactory::make($type , $code , $user);
 
-            return;
-        }
-
-        $this->sendSms($user->phone, $code);
+        $sender->send($code , $user);
     }
 
     public function updateProfile(User $user, array $data)
