@@ -39,17 +39,21 @@ class AuthController extends Controller
 
     public function verifyUser(CheckCodeRequest $request)
     {
+        try{
+
         $result = $this->auth->verifyUser($request->validated());
 
-        if ($result) {
-            $user = $result['user'];
+        if ($result && $result['token'] ) {
+            
             $token = $result['token'];
-            event(new \App\Events\UserVerified($user));
 
             return $this->dataResponse(['token' => $token], __('your account is activated successfully!'), 200);
         }
 
         return $this->dataResponse(null, __('invalid code'), 422);
+        } catch (\Throwable $e) {
+            return $this->dataResponse(null, $e->getMessage(), 422);
+        }
     }
 
     public function login(LoginRequest $request)

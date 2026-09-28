@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use App\Events\UserVerified;
 use App\Factories\VerificationCodeDestinationFactory;
 use App\Mail\VerifyEmail;
 use App\Models\Token;
@@ -66,12 +67,14 @@ class AuthService
             $user,
             $this->verificationPurpose($data['type']),
             $data['value'],
-            $data['code']
+            $data['code'],
+            $data['type']
         )) {
             return null;
         }
 
-        $user->update([$this->activationColumn($data['type']) => true]);
+
+        event(new UserVerified($user));
 
         return [
             'user' => $user,

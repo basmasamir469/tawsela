@@ -43,6 +43,9 @@ return [
     ],
     'stripe' => [
         'secret' => env('STRIPE_KEY')
-    ]
+    ],
+    'gemini' => [
+    'api_key' => env('GEMINI_API_KEY'),
+    ],
 
 ];

@@ -57,9 +57,9 @@ class VerificationChallengeService
         });
     }
 
-    public function verifyAndConsume(User $user, string $purpose, string $destination, string $code): bool
+    public function verifyAndConsume(User $user, string $purpose, string $destination, string $code ,$type = null): bool
     {
-        return DB::transaction(function () use ($user, $purpose, $destination, $code): bool {
+        return DB::transaction(function () use ($user, $purpose, $destination, $code, $type): bool {
             $challenge = $this->activeChallenge($user, $purpose, $destination, true);
 
             if ($challenge === null) {
@@ -76,6 +76,8 @@ class VerificationChallengeService
 
             if (Hash::check($code, $challenge->code_hash)) {
                 $challenge->update(['consumed_at' => now()]);
+
+                $user->update(["is_active_{$type}" => true]);
 
                 return true;
             }

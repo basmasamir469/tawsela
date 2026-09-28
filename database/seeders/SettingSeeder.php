@@ -14,7 +14,7 @@ class SettingSeeder extends Seeder
      */
     public function run(): void
     {
-        $settings = include database_path('seeders\initial_data\settings.php');
+        $settings = include database_path('seeders/initial_data/settings.php');
 
         foreach($settings as $setting)
         {

@@ -180,7 +180,7 @@ class OrderService
     {
         $order = Order::find($orderId);
 
-        if (! $order || $order->order_status !== Order::ACCEPTED) {
+        if (! $order || $order->order_status == Order::ACCEPTED) {
             return false;
         }
 

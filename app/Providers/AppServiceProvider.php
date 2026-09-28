@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Chat\AiServices\GeminiAiService;
+use App\Services\Chat\Contracts\AiServiceInterface;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -13,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(AiServiceInterface::class,GeminiAiService::class);
     }
 
     /**
@@ -31,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
         $lang=request()->header('X-Language')??'ar';
         $lang=str_contains($lang,'en')?'en':'ar';
         App::setLocale($lang);
+
 
     }
 }

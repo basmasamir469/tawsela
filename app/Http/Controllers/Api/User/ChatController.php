@@ -18,6 +18,10 @@ class ChatController extends Controller
     {
         $response    = $this->chatService->supportChat($request->validated());
 
+        if(!is_string($response) && isset($response['error'])) {
+            return $this->errorResponse($response['error'],null ,$response['code'] ?? 400);
+        }
+
         return $this->dataResponse($response);
     }
 }

@@ -13,8 +13,8 @@ class VerificationCodeDestinationFactory
      {
         return match ($type){
 
-           'email' => new EmailVerificationType($code , $user),
-           'sms' => new SmsVerificationType($code , $user)
+           'email' => new EmailVerificationType(),
+           'phone' => new SmsVerificationType()
 
         };
      }

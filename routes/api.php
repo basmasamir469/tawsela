@@ -41,7 +41,6 @@ Route::group(['prefix'=>'v1','namespace'=>'Api'],function(){
         Route::post('voice-alert','MainController@voiceAlert');
         Route::post('activate-notifications','MainController@activateNotifications');
         Route::post('my-profile','MainController@profile');
-        Route::post('chat','ChatController@supportChat');
 
 
         Route::group(['namespace'=>'Driver','middleware'=>'role:driver'],function(){
@@ -83,6 +82,8 @@ Route::group(['prefix'=>'v1','namespace'=>'Api'],function(){
 
 
         Route::group(['namespace'=>'User','middleware'=>'role:user'],function(){
+            
+            Route::post('chat','ChatController@supportChat');
 
             Route::post('addresses','AddressController@store');
             Route::get('addresses','AddressController@index');

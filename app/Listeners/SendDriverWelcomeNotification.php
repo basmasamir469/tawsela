@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Listeners;
 
@@ -6,8 +6,9 @@ use App\Events\UserVerified;
 use App\Models\Notification;
 use App\Models\Token;
 use App\Traits\SendNotification;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class SendDriverWelcomeNotification
+class SendDriverWelcomeNotification implements ShouldQueue
 {
     use SendNotification;
 
