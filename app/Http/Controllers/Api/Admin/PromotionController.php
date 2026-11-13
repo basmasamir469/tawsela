@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\admins\PromotionRequest;
 use App\Models\Notification;
 use App\Models\Promotion;
-use App\Models\Token;
 use App\Models\User;
+use App\Jobs\SendFirebaseNotification;
 use App\Transformers\PromotionTransformer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,30 +46,18 @@ class PromotionController extends Controller
        })->where('notify_status',1)->where('is_active_phone',1)->orWhere('is_active_email',1)->pluck('id')->toArray();
 
       $notification->users()->attach($users_ids);
-      $android_tokens = Token::whereIn('user_id',$users_ids)->where('device_type','android')->pluck('token')->toArray();
-      $ios_tokens = Token::whereIn('user_id',$users_ids)->where('device_type','ios')->pluck('token')->toArray();
-      if(count($android_tokens) > 0)
+      if(count($users_ids) > 0)
       {
-          $data =
-          [
+          $data = [
              'title'      => $notification->title,
              'body'       => $notification->description,
              'action_id'  => $promotion->id,
              'action_type'=> 'new-promotion'
           ];
-         $this->notifyByFirebase($android_tokens,$data,'android');
-      }
-  
-      if(count($ios_tokens) > 0)
-      {
-          $data =
-          [
-             'title'      => $notification->title,
-             'body'       => $notification->description,
-             'promotion_id'  => $promotion->id,
-             'action_type'=> 'new-promotion'
-          ];
-         $this->notifyByFirebase($ios_tokens,$data,'ios');
+         SendFirebaseNotification::dispatch($users_ids, $data, 'android')->afterCommit();
+         $data['promotion_id'] = $promotion->id;
+         unset($data['action_id']);
+         SendFirebaseNotification::dispatch($users_ids, $data, 'ios')->afterCommit();
       }
       DB::commit();
       return $this->dataResponse(null,__('promotion stored successfully'),200);

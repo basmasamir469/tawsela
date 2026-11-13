@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Api\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\drivers\CancelOrderRequest;
 use App\Http\Requests\users\OrderRequest;
+use App\Services\Order\Contracts\OrderCancellation;
 use App\Services\Order\OrderService;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    public function __construct(protected OrderService $orderService)
+    public function __construct(protected OrderService $orderService, protected OrderCancellation $orderCancellation)
     {
     }
 
@@ -46,7 +47,7 @@ class OrderController extends Controller
     {
         $data = $request->validated();
 
-        if ($this->orderService->cancelOrder($request->user(), (int) $id, $data)) {
+        if ($this->orderCancellation->cancelOrder($request->user(), (int) $id, $data)) {
             return $this->dataResponse(null, __('order is cancelled successfully'), 200);
         }
 

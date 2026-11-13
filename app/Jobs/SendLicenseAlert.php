@@ -6,11 +6,11 @@ use App\Models\Notification;
 use App\Models\Token;
 use App\Traits\SendNotification;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use RuntimeException;
 
 class SendLicenseAlert implements ShouldQueue
 {
@@ -20,6 +20,14 @@ class SendLicenseAlert implements ShouldQueue
      * Create a new job instance.
      */
     public $drivers_ids;
+    public int $tries = 5;
+    public bool $afterCommit = true;
+
+    public function backoff(): array
+    {
+        return [10, 30, 60, 120];
+    }
+
     public function __construct($drivers)
     {
         $this->drivers_ids = $drivers->pluck('id')->toArray();
@@ -44,12 +52,14 @@ class SendLicenseAlert implements ShouldQueue
           ];
           if(count($android_tokens) > 0)
           {
-             $this->notifyByFirebase($android_tokens,$data,'android');
+             $result = $this->notifyByFirebase($android_tokens,$data,'android');
+             if (! empty($result['failed'])) throw new RuntimeException('Failed to send Android license alerts.');
           }
   
           if(count($ios_tokens) > 0)
           {
-             $this->notifyByFirebase($ios_tokens,$data,'ios');
+             $result = $this->notifyByFirebase($ios_tokens,$data,'ios');
+             if (! empty($result['failed'])) throw new RuntimeException('Failed to send iOS license alerts.');
           }  
     }
 }

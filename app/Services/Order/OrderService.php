@@ -19,7 +19,7 @@ use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 
-class OrderService
+class OrderService implements \App\Services\Order\Contracts\OrderCancellation
 {
 
     use SendNotification;
@@ -178,39 +178,54 @@ class OrderService
 
     public function cancelOrder(User $user, int $orderId, array $data): bool
     {
-        $order = Order::find($orderId);
+        return DB::transaction(function () use ($user, $orderId, $data) {
+            $driverId = Order::query()
+                ->where('id', $orderId)
+                ->where('user_id', $user->id)
+                ->value('driver_id');
 
-        if (! $order || $order->order_status == Order::ACCEPTED) {
-            return false;
+            $affected = Order::query()
+                ->where('id', $orderId)
+                ->where('user_id', $user->id)
+                ->where('order_status', '!=', Order::ACCEPTED)
+                ->update([
+                    'order_status' => Order::CANCELLED,
+                    'cancel_reason' => $data['cancel_reason'],
+                    'updated_at' => now(),
+                ]);
+
+            if ($affected === 0) {
+                return false;
+            }
+
+            $this->makeDriverAvailableIfNoActiveOrders($driverId);
+
+            return true;
+        });
+    }
+
+    private function makeDriverAvailableIfNoActiveOrders(?int $driverId): void
+    {
+        if ($driverId === null) {
+            return;
         }
 
-        $order->update([
-            'order_status' => Order::CANCELLED,
-            'cancel_reason' => $data['cancel_reason'],
-        ]);
-        $order->driver?->update(['availability_status' => DriverAvailabilityStatus::AVAILABLE]);
-
-        $notification = Notification::create([
-            'ar' => ['title' => 'تم إلغاء الطلب', 'description' => 'نأسف لإبلاغك أن الطلب تم إلغاؤه'],
-            'en' => ['title' => 'order is cancelled', 'description' => 'we are sorry to inform you that order is cancelled'],
-        ]);
-
-        $notification->users()->attach($order->driver_id);
-
-        $token = Token::where('user_id', $order->driver_id)->first();
-
-        if ($token) {
-            $payload = [
-                'title' => $notification->title,
-                'body' => $notification->description,
-                'action_id' => $order->id,
-                'action_type' => 'cancel-order',
-            ];
-
-            $this->notifyByFirebase([$token->device_id], $payload, $token->device_type);
-        }
-
-        return true;
+        User::query()
+            ->whereKey($driverId)
+            ->where('availability_status', DriverAvailabilityStatus::BUSY->value)
+            ->whereNotExists(function ($query) {
+                $query->selectRaw('1')
+                    ->from('orders')
+                    ->whereColumn('orders.driver_id', 'users.id')
+                    ->whereIn('orders.order_status', [
+                        Order::ACCEPTED,
+                        Order::ARRIVED,
+                        Order::STARTED,
+                        Order::INWAY,
+                        Order::FINISHED,
+                    ]);
+            })
+            ->update(['availability_status' => DriverAvailabilityStatus::AVAILABLE->value]);
     }
 
     public function showOrder(int $orderId): array

@@ -1,0 +1,2748 @@
+{
+  "info": {
+    "name": "Tawsela API",
+    "description": "Complete collection generated from routes/api.php and routes/admin.php. API paths include the /api prefix. Configure base_url and token in collection variables. Admin endpoints require the authenticated admin role in addition to Sanctum authentication. Routes with missing or empty controller actions are retained and flagged in their descriptions.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "System",
+      "description": "Generic authenticated API endpoints.",
+      "item": [
+        {
+          "name": "Get authenticated user",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "user"
+              ]
+            },
+            "description": "Returns the current authenticated user. Requires a Sanctum bearer token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "description": "Public authentication endpoints and authenticated account actions.",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Role",
+                "value": "user",
+                "description": "Optional: user or driver. Defaults to user."
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "register"
+              ]
+            },
+            "description": "Register an account. FormRequest: name, phone, address, image, device_id, and device_type are required; device_type is ios or android. password uses confirmed|min:6 but lacks required, while the service accesses it directly; include password and password_confirmation. X-Role optionally selects user or driver (default user). Image is uploaded as a file.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Mona Hassan",
+                  "type": "text",
+                  "description": "Required.",
+                  "disabled": false
+                },
+                {
+                  "key": "phone",
+                  "value": "01012345678",
+                  "type": "text",
+                  "description": "Required; Egyptian mobile pattern (01 followed by 9 digits).",
+                  "disabled": false
+                },
+                {
+                  "key": "address",
+                  "value": "Cairo, Egypt",
+                  "type": "text",
+                  "description": "Required.",
+                  "disabled": false
+                },
+                {
+                  "key": "password",
+                  "value": "secret123",
+                  "type": "text",
+                  "description": "Service requires it; validation has confirmed|min:6 but no required rule.",
+                  "disabled": false
+                },
+                {
+                  "key": "password_confirmation",
+                  "value": "secret123",
+                  "type": "text",
+                  "description": "Confirmation for password; needed when password is supplied.",
+                  "disabled": false
+                },
+                {
+                  "key": "image",
+                  "value": "",
+                  "type": "file",
+                  "description": "Required uploaded image (no image MIME rule in RegisterRequest).",
+                  "disabled": false,
+                  "src": ""
+                },
+                {
+                  "key": "device_id",
+                  "value": "device-id-example",
+                  "type": "text",
+                  "description": "Required.",
+                  "disabled": false
+                },
+                {
+                  "key": "device_type",
+                  "value": "android",
+                  "type": "text",
+                  "description": "Required; ios or android.",
+                  "disabled": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Verify user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/verify-user",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "verify-user"
+              ]
+            },
+            "description": "Validate a phone or email verification code. Required: type (email|phone), value, code (6 digits).",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"phone\",\n  \"value\": \"01012345678\",\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "Authenticate with email or phone. Required: type, value (email format if type=email, Egyptian phone pattern if type=phone), password, device_id, device_type (ios|android).",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"phone\",\n  \"value\": \"01012345678\",\n  \"password\": \"secret123\",\n  \"device_id\": \"device-id-example\",\n  \"device_type\": \"android\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Social login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Role",
+                "value": "user",
+                "description": "Optional: user or driver. Defaults to user."
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/social-login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "social-login"
+              ]
+            },
+            "description": "Social login. Required: provider (facebook|google) and token. X-Role optionally selects user or driver; it overrides the request role during preparation and defaults to user.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": \"google\",\n  \"token\": \"provider-access-token\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Request password reset code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/forget-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "forget-password"
+              ]
+            },
+            "description": "Request a password-reset code. Required: type (phone|email) and value; the value format is not additionally validated.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"email\",\n  \"value\": \"user@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Check password reset code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reset-password/checkcode",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reset-password",
+                "checkcode"
+              ]
+            },
+            "description": "Check a reset code. Required: type (phone|email), value, code (6 digits).",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"phone\",\n  \"value\": \"01012345678\",\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Reset password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reset-password"
+              ]
+            },
+            "description": "Reset password. Required: type (phone|email), value, code (6 digits), password and password_confirmation (confirmed|min:6).",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"phone\",\n  \"value\": \"01012345678\",\n  \"code\": \"123456\",\n  \"password\": \"newsecret123\",\n  \"password_confirmation\": \"newsecret123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "logout"
+              ]
+            },
+            "description": "Revoke the current Sanctum token. Controller also deletes device tokens matching device_id; no validation rules are defined for device_id.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_id\": \"device-id-example\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/update-profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "update-profile"
+              ]
+            },
+            "description": "Update account/profile fields. Multipart form-data supports uploaded files. Required fields vary by authenticated role; see field descriptions. Several required fields have no value/type validation beyond the listed rules.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Mona Hassan",
+                  "type": "text",
+                  "description": "Required.",
+                  "disabled": false
+                },
+                {
+                  "key": "phone",
+                  "value": "01012345678",
+                  "type": "text",
+                  "description": "Required; Egyptian mobile pattern.",
+                  "disabled": false
+                },
+                {
+                  "key": "address",
+                  "value": "Cairo, Egypt",
+                  "type": "text",
+                  "description": "Required.",
+                  "disabled": false
+                },
+                {
+                  "key": "national_number",
+                  "value": "123456789012",
+                  "type": "text",
+                  "description": "Required for driver; nullable for user. 12 digits and unique except current user.",
+                  "disabled": false
+                },
+                {
+                  "key": "car_type_id",
+                  "value": "1",
+                  "type": "text",
+                  "description": "Required for driver; role-dependent; no explicit type rule.",
+                  "disabled": false
+                },
+                {
+                  "key": "car_brand_id",
+                  "value": "1",
+                  "type": "text",
+                  "description": "Required for driver; role-dependent.",
+                  "disabled": false
+                },
+                {
+                  "key": "car_color",
+                  "value": "1",
+                  "type": "text",
+                  "description": "Required for driver; role-dependent.",
+                  "disabled": false
+                },
+                {
+                  "key": "metal_plate_numbers",
+                  "value": "123",
+                  "type": "text",
+                  "description": "Required for driver; exactly 3 digits.",
+                  "disabled": false
+                },
+                {
+                  "key": "model_year",
+                  "value": "2024",
+                  "type": "text",
+                  "description": "Required for driver; role-dependent.",
+                  "disabled": false
+                },
+                {
+                  "key": "license_date",
+                  "value": "2027-12-31",
+                  "type": "text",
+                  "description": "Required for driver; role-dependent; controller stores this as license_expire_date.",
+                  "disabled": false
+                },
+                {
+                  "key": "image",
+                  "value": "",
+                  "type": "file",
+                  "description": "Optional uploaded profile image.",
+                  "disabled": true,
+                  "src": ""
+                },
+                {
+                  "key": "nationalId_image",
+                  "value": "",
+                  "type": "file",
+                  "description": "Optional image.",
+                  "disabled": true,
+                  "src": ""
+                },
+                {
+                  "key": "driving_license",
+                  "value": "",
+                  "type": "file",
+                  "description": "Optional file; max 1024 KB; pdf/doc/docx.",
+                  "disabled": true,
+                  "src": ""
+                },
+                {
+                  "key": "personal_image",
+                  "value": "",
+                  "type": "file",
+                  "description": "Optional file; max 1024 KB; png/jpg.",
+                  "disabled": true,
+                  "src": ""
+                },
+                {
+                  "key": "drug_analysis",
+                  "value": "",
+                  "type": "file",
+                  "description": "Optional file; max 1024 KB; pdf/doc/docx.",
+                  "disabled": true,
+                  "src": ""
+                },
+                {
+                  "key": "criminal_record",
+                  "value": "",
+                  "type": "file",
+                  "description": "Optional file; max 1024 KB; pdf/doc/docx.",
+                  "disabled": true,
+                  "src": ""
+                },
+                {
+                  "key": "vehicle_license",
+                  "value": "",
+                  "type": "file",
+                  "description": "Optional file; max 1024 KB; pdf/doc/docx.",
+                  "disabled": true,
+                  "src": ""
+                },
+                {
+                  "key": "vehicle_license_behind",
+                  "value": "",
+                  "type": "file",
+                  "description": "Optional file; max 1024 KB; pdf/doc/docx.",
+                  "disabled": true,
+                  "src": ""
+                },
+                {
+                  "key": "vehicle_inspection",
+                  "value": "",
+                  "type": "file",
+                  "description": "Optional file; max 1024 KB; pdf/doc/docx.",
+                  "disabled": true,
+                  "src": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Account Settings",
+      "description": "Authenticated account preferences and profile.",
+      "item": [
+        {
+          "name": "Toggle voice alert",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/voice-alert",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "voice-alert"
+              ]
+            },
+            "description": "Toggle the authenticated user's voice_alert setting; no request body."
+          }
+        },
+        {
+          "name": "Toggle notifications",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/activate-notifications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "activate-notifications"
+              ]
+            },
+            "description": "Toggle the authenticated user's notification preference; no request body."
+          }
+        },
+        {
+          "name": "Get profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/my-profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "my-profile"
+              ]
+            },
+            "description": "Return the authenticated user's profile; no request body."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Driver - Account",
+      "description": "Requires Sanctum bearer token, role:driver, and is_account_opened.",
+      "item": [
+        {
+          "name": "Submit driver documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/driver-documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "driver-documents"
+              ]
+            },
+            "description": "Submit driver identity documents. Required fields: national_number (12 digits, unique), nationalId_image (image), driving_license (file <=1024 KB, pdf/doc/docx), personal_image (file <=1024 KB, png/jpg). drug_analysis and criminal_record are optional files <=1024 KB, pdf/doc/docx.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "national_number",
+                  "value": "123456789012",
+                  "type": "text",
+                  "description": "Required; 12 digits; unique.",
+                  "disabled": false
+                },
+                {
+                  "key": "nationalId_image",
+                  "value": "",
+                  "type": "file",
+                  "description": "Required image.",
+                  "disabled": false,
+                  "src": ""
+                },
+                {
+                  "key": "driving_license",
+                  "value": "",
+                  "type": "file",
+                  "description": "Required; pdf/doc/docx; max 1024 KB.",
+                  "disabled": false,
+                  "src": ""
+                },
+                {
+                  "key": "personal_image",
+                  "value": "",
+                  "type": "file",
+                  "description": "Required; png/jpg; max 1024 KB.",
+                  "disabled": false,
+                  "src": ""
+                },
+                {
+                  "key": "drug_analysis",
+                  "value": "",
+                  "type": "file",
+                  "description": "Optional; pdf/doc/docx; max 1024 KB.",
+                  "disabled": true,
+                  "src": ""
+                },
+                {
+                  "key": "criminal_record",
+                  "value": "",
+                  "type": "file",
+                  "description": "Optional; pdf/doc/docx; max 1024 KB.",
+                  "disabled": true,
+                  "src": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit vehicle documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/vehicle-documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicle-documents"
+              ]
+            },
+            "description": "Submit vehicle details and documents. Required: car_type_id, car_brand_id, car_color, metal_plate_numbers (3 digits), model_year, license_expire_date (date), vehicle_license and vehicle_license_behind (pdf/doc/docx <=1024 KB). vehicle_inspection is optional with the same file restrictions.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "car_type_id",
+                  "value": "1",
+                  "type": "text",
+                  "description": "Required.",
+                  "disabled": false
+                },
+                {
+                  "key": "car_brand_id",
+                  "value": "1",
+                  "type": "text",
+                  "description": "Required.",
+                  "disabled": false
+                },
+                {
+                  "key": "car_color",
+                  "value": "1",
+                  "type": "text",
+                  "description": "Required.",
+                  "disabled": false
+                },
+                {
+                  "key": "metal_plate_numbers",
+                  "value": "123",
+                  "type": "text",
+                  "description": "Required; 3 digits.",
+                  "disabled": false
+                },
+                {
+                  "key": "model_year",
+                  "value": "2024",
+                  "type": "text",
+                  "description": "Required.",
+                  "disabled": false
+                },
+                {
+                  "key": "license_expire_date",
+                  "value": "2027-12-31",
+                  "type": "text",
+                  "description": "Required date.",
+                  "disabled": false
+                },
+                {
+                  "key": "vehicle_license",
+                  "value": "",
+                  "type": "file",
+                  "description": "Required; pdf/doc/docx; max 1024 KB.",
+                  "disabled": false,
+                  "src": ""
+                },
+                {
+                  "key": "vehicle_license_behind",
+                  "value": "",
+                  "type": "file",
+                  "description": "Required; pdf/doc/docx; max 1024 KB.",
+                  "disabled": false,
+                  "src": ""
+                },
+                {
+                  "key": "vehicle_inspection",
+                  "value": "",
+                  "type": "file",
+                  "description": "Optional; pdf/doc/docx; max 1024 KB.",
+                  "disabled": true,
+                  "src": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List car types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/car-types",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "car-types"
+              ]
+            },
+            "description": "Return driver registration reference data; no request inputs."
+          }
+        },
+        {
+          "name": "List car brands",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/car-brands",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "car-brands"
+              ]
+            },
+            "description": "Return driver registration reference data; no request inputs."
+          }
+        },
+        {
+          "name": "List car colors",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/car-colors",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "car-colors"
+              ]
+            },
+            "description": "Return driver registration reference data; no request inputs."
+          }
+        },
+        {
+          "name": "List model years",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/model-years",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "model-years"
+              ]
+            },
+            "description": "Return driver registration reference data; no request inputs."
+          }
+        },
+        {
+          "name": "Toggle driver activation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/activate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "activate"
+              ]
+            },
+            "description": "Toggle the current driver's active status; no request body."
+          }
+        },
+        {
+          "name": "Update current location",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/current-location",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "current-location"
+              ]
+            },
+            "description": "Update location and publish a location event. Controller reads latitude and longitude but defines no validation rules; both are included based on implementation.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 30.0444,\n  \"longitude\": 31.2357\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update driver location",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/driver-location",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "driver-location"
+              ]
+            },
+            "description": "Update location. Required numeric latitude and longitude by inline validation.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 30.0444,\n  \"longitude\": 31.2357\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Go offline",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/driver-go-offline",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "driver-go-offline"
+              ]
+            },
+            "description": "Remove the authenticated driver from online location tracking; no request body."
+          }
+        },
+        {
+          "name": "Get driver details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/driver-details",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "driver-details"
+              ]
+            },
+            "description": "Return the authenticated driver's details."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Driver - Orders",
+      "description": "Requires Sanctum bearer token, role:driver, and is_account_opened except payment route.",
+      "item": [
+        {
+          "name": "Reject order offer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/driver/orders/:order/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "driver",
+                "orders",
+                ":order",
+                "reject"
+              ],
+              "variable": [
+                {
+                  "key": "order",
+                  "value": "1",
+                  "description": "order route parameter"
+                }
+              ]
+            },
+            "description": "Reject a pending offer. Path `order` is model-bound. Optional `reason` string up to 1000 chars; `driver_id` is prohibited because the authenticated driver is used.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Too far away\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List pending orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pending-orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pending-orders"
+              ]
+            },
+            "description": "List pending order offers for the authenticated driver."
+          }
+        },
+        {
+          "name": "Call customer",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/phone-call/:order_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "phone-call",
+                ":order_id"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "1",
+                  "description": "order_id route parameter"
+                }
+              ]
+            },
+            "description": "Initiate a Vonage call to the customer for this order."
+          }
+        },
+        {
+          "name": "Cancel accepted order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/drivers/cancel-order/:order_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "drivers",
+                "cancel-order",
+                ":order_id"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "1",
+                  "description": "order_id route parameter"
+                }
+              ]
+            },
+            "description": "Cancel an accepted order. Required body: cancel_reason.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancel_reason\": \"Unable to continue\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Accept order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/accept-order/:order_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accept-order",
+                ":order_id"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "1",
+                  "description": "order_id route parameter"
+                }
+              ]
+            },
+            "description": "Accept an available order."
+          }
+        },
+        {
+          "name": "Mark driver arrived",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/arrived/:order_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "arrived",
+                ":order_id"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "1",
+                  "description": "order_id route parameter"
+                }
+              ]
+            },
+            "description": "Mark arrival for an accepted order and notify its customer."
+          }
+        },
+        {
+          "name": "Start drive",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/start-drive/:order_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "start-drive",
+                ":order_id"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "1",
+                  "description": "order_id route parameter"
+                }
+              ]
+            },
+            "description": "Start an accepted drive."
+          }
+        },
+        {
+          "name": "Finish drive",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/finish-drive/:order_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "finish-drive",
+                ":order_id"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "1",
+                  "description": "order_id route parameter"
+                }
+              ]
+            },
+            "description": "Finish a started drive. waiting_price is read from the request and defaults to 0; no validation rules are defined.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"waiting_price\": 25\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Complete drive",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/complete-drive/:order_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "complete-drive",
+                ":order_id"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "1",
+                  "description": "order_id route parameter"
+                }
+              ]
+            },
+            "description": "Complete a finished drive."
+          }
+        },
+        {
+          "name": "Get order details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/order-details/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "order-details",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "id route parameter"
+                }
+              ]
+            },
+            "description": "Return driver-facing order details."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Driver - Drives and Wallet",
+      "description": "Requires Sanctum bearer token, role:driver, and is_account_opened.",
+      "item": [
+        {
+          "name": "List drive dates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/drives-dates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "drives-dates"
+              ]
+            },
+            "description": "Return dates with recorded drives; no request inputs."
+          }
+        },
+        {
+          "name": "List drives",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/drives",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "drives"
+              ],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0",
+                  "description": "Pagination offset; controller defaults to 0.",
+                  "disabled": false
+                },
+                {
+                  "key": "take",
+                  "value": "10",
+                  "description": "Page size; controller defaults to 10.",
+                  "disabled": false
+                },
+                {
+                  "key": "date",
+                  "value": "2026-11-14",
+                  "description": "Optional date filter (YYYY-MM-DD).",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "List drives. Query: skip and take pagination values, date filters by created_at (YYYY-MM-DD). No validation rules are defined."
+          }
+        },
+        {
+          "name": "Get drive invoice",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/drive-invoice/:order_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "drive-invoice",
+                ":order_id"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "1",
+                  "description": "order_id route parameter"
+                }
+              ]
+            },
+            "description": "Return the invoice for an order."
+          }
+        },
+        {
+          "name": "Get wallet summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/my-wallet",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "my-wallet"
+              ],
+              "query": [
+                {
+                  "key": "filter",
+                  "value": "month",
+                  "description": "Optional: day, week, or month.",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Return wallet aggregates. Optional filter query is day, week, or month (date range applies to created_at)."
+          }
+        },
+        {
+          "name": "List driver notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/driver-notifications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "driver-notifications"
+              ],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0",
+                  "description": "Pagination offset; default 0.",
+                  "disabled": false
+                },
+                {
+                  "key": "take",
+                  "value": "10",
+                  "description": "Page size; default 10.",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "List notifications. Optional skip/take pagination; defaults are 0 and 10. No validation rules are defined."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Driver - Payments",
+      "description": "Requires Sanctum bearer token and role:driver.",
+      "item": [
+        {
+          "name": "Pay driver balance with Stripe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stripe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stripe"
+              ]
+            },
+            "description": "Create a Stripe card token and charge the authenticated driver's current debit. Required: card-number, exp-month, exp-year, cvc. Optional description. No account-opened middleware is applied to this route.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"card-number\": \"4242424242424242\",\n  \"exp-month\": \"12\",\n  \"exp-year\": \"2030\",\n  \"cvc\": \"123\",\n  \"description\": \"Driver balance\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "description": "Requires Sanctum bearer token and role:user.",
+      "item": [
+        {
+          "name": "Send support chat message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "chat"
+              ]
+            },
+            "description": "Send a chat message to the support chat assistant. Required: message.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"How can I update my address?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Create address",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/addresses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses"
+              ]
+            },
+            "description": "Create an address. Required: type (0, 1, or 2), name, latitude (-90..90), longitude (-180..180).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": 0,\n  \"name\": \"Home\",\n  \"latitude\": 30.0444,\n  \"longitude\": 31.2357\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/addresses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses"
+              ]
+            },
+            "description": "List addresses for the authenticated user."
+          }
+        },
+        {
+          "name": "Update address",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/addresses/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "addresses",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "id route parameter"
+                }
+              ]
+            },
+            "description": "Update an address matching the path id and supplied type. Required fields are identical to address creation.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": 0,\n  \"name\": \"Home\",\n  \"latitude\": 30.0444,\n  \"longitude\": 31.2357\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List drive vehicles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/drive-vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "drive-vehicles"
+              ]
+            },
+            "description": "List vehicle types available for orders."
+          }
+        },
+        {
+          "name": "Create drive order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/make-order",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "make-order"
+              ]
+            },
+            "description": "Create a drive order. Required: start/end latitude and longitude within geographic ranges, car_type_id, and numeric price. start_address/end_address, promo_code, and drive_distance are nullable per validation, but the service accesses both address keys; include them to avoid missing-key errors.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_address\": \"Tahrir Square, Cairo\",\n  \"start_latitude\": 30.0444,\n  \"start_longitude\": 31.2357,\n  \"end_address\": \"Cairo Tower, Cairo\",\n  \"end_latitude\": 30.0459,\n  \"end_longitude\": 31.2243,\n  \"car_type_id\": 1,\n  \"price\": 150,\n  \"promo_code\": \"\",\n  \"drive_distance\": 3.2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cancel drive order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/cancel-order/:order_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "cancel-order",
+                ":order_id"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": "1",
+                  "description": "order_id route parameter"
+                }
+              ]
+            },
+            "description": "Cancel an order if allowed by order state. Required: cancel_reason.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancel_reason\": \"Plans changed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List my drives",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/my-drives",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "my-drives"
+              ],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0",
+                  "description": "Pagination offset; default 0.",
+                  "disabled": false
+                },
+                {
+                  "key": "take",
+                  "value": "10",
+                  "description": "Page size; default 10.",
+                  "disabled": false
+                },
+                {
+                  "key": "filter",
+                  "value": "incoming",
+                  "description": "Optional: incoming, cancelled, or completed.",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "List the authenticated user's orders. Optional skip/take pagination and filter (incoming|cancelled|completed)."
+          }
+        },
+        {
+          "name": "Get drive details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/drive-details/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "drive-details",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "id route parameter"
+                }
+              ]
+            },
+            "description": "Get drive details by order id."
+          }
+        },
+        {
+          "name": "Create driver review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/make-review/:driver_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "make-review",
+                ":driver_id"
+              ],
+              "variable": [
+                {
+                  "key": "driver_id",
+                  "value": "1",
+                  "description": "driver_id route parameter"
+                }
+              ]
+            },
+            "description": "Create a review. Required rate (1..5); optional comment.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rate\": 5,\n  \"comment\": \"Excellent service\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List user notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/user-notifications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "user-notifications"
+              ],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0",
+                  "description": "Pagination offset; default 0.",
+                  "disabled": false
+                },
+                {
+                  "key": "take",
+                  "value": "10",
+                  "description": "Page size; default 10.",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "List notifications. Optional skip/take pagination; defaults are 0 and 10."
+          }
+        },
+        {
+          "name": "Apply promotion",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/apply-promotion/:promotion_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "apply-promotion",
+                ":promotion_id"
+              ],
+              "variable": [
+                {
+                  "key": "promotion_id",
+                  "value": "1",
+                  "description": "promotion_id route parameter"
+                }
+              ]
+            },
+            "description": "Attach the path promotion to the authenticated user. No request validation rules are defined."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Car Types",
+      "description": "Requires Sanctum bearer token and the admin role middleware.",
+      "item": [
+        {
+          "name": "List car types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/car_types",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "car_types"
+              ]
+            },
+            "description": "List car types."
+          }
+        },
+        {
+          "name": "Get car type",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/car_types/:car_type",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "car_types",
+                ":car_type"
+              ],
+              "variable": [
+                {
+                  "key": "car_type",
+                  "value": "1",
+                  "description": "car_type route parameter"
+                }
+              ]
+            },
+            "description": "Route is registered to CarTypeController@show, whose method is empty and returns no documented representation."
+          }
+        },
+        {
+          "name": "Create car type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/car_types",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "car_types"
+              ]
+            },
+            "description": "Required: name_en, name_ar, price, image. Image is uploaded as a file.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name_en",
+                  "value": "Sedan",
+                  "type": "text",
+                  "description": "Required.",
+                  "disabled": false
+                },
+                {
+                  "key": "name_ar",
+                  "value": "سيارة سيدان",
+                  "type": "text",
+                  "description": "Required.",
+                  "disabled": false
+                },
+                {
+                  "key": "price",
+                  "value": "2.5",
+                  "type": "text",
+                  "description": "Required; stored as price_per_meter.",
+                  "disabled": false
+                },
+                {
+                  "key": "image",
+                  "value": "",
+                  "type": "file",
+                  "description": "Required uploaded image; no MIME rule defined.",
+                  "disabled": false,
+                  "src": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update car type",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/car_types/:car_type",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "car_types",
+                ":car_type"
+              ],
+              "variable": [
+                {
+                  "key": "car_type",
+                  "value": "1",
+                  "description": "car_type route parameter"
+                }
+              ]
+            },
+            "description": "CarTypeRequest requires name_en, name_ar, price, image even though controller has fallback names. Image is uploaded as a file.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name_en",
+                  "value": "Sedan",
+                  "type": "text",
+                  "description": "Required by request validation.",
+                  "disabled": false
+                },
+                {
+                  "key": "name_ar",
+                  "value": "سيارة سيدان",
+                  "type": "text",
+                  "description": "Required by request validation.",
+                  "disabled": false
+                },
+                {
+                  "key": "price",
+                  "value": "2.5",
+                  "type": "text",
+                  "description": "Required.",
+                  "disabled": false
+                },
+                {
+                  "key": "image",
+                  "value": "",
+                  "type": "file",
+                  "description": "Required uploaded image.",
+                  "disabled": false,
+                  "src": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete car type",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/car_types/:car_type",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "car_types",
+                ":car_type"
+              ],
+              "variable": [
+                {
+                  "key": "car_type",
+                  "value": "1",
+                  "description": "car_type route parameter"
+                }
+              ]
+            },
+            "description": "Delete a car type."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Car Brands",
+      "description": "Requires Sanctum bearer token and the admin role middleware.",
+      "item": [
+        {
+          "name": "List car brands",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/car_brands",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "car_brands"
+              ]
+            },
+            "description": "List car brands."
+          }
+        },
+        {
+          "name": "Get car brand",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/car_brands/:car_brand",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "car_brands",
+                ":car_brand"
+              ],
+              "variable": [
+                {
+                  "key": "car_brand",
+                  "value": "1",
+                  "description": "car_brand route parameter"
+                }
+              ]
+            },
+            "description": "Registered route targets CarTypeController@show (not CarBrandController); target method is empty. Retained as registered."
+          }
+        },
+        {
+          "name": "Create car brand",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/car_brands",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "car_brands"
+              ]
+            },
+            "description": "Required: name_en and name_ar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name_en\": \"Toyota\",\n  \"name_ar\": \"تويوتا\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update car brand",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/car_brands/:car_brand",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "car_brands",
+                ":car_brand"
+              ],
+              "variable": [
+                {
+                  "key": "car_brand",
+                  "value": "1",
+                  "description": "car_brand route parameter"
+                }
+              ]
+            },
+            "description": "CarBrandRequest requires name_en and name_ar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name_en\": \"Toyota\",\n  \"name_ar\": \"تويوتا\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete car brand",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/car_brands/:car_brand",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "car_brands",
+                ":car_brand"
+              ],
+              "variable": [
+                {
+                  "key": "car_brand",
+                  "value": "1",
+                  "description": "car_brand route parameter"
+                }
+              ]
+            },
+            "description": "Delete a car brand."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Promotions",
+      "description": "Requires Sanctum bearer token and the admin role middleware.",
+      "item": [
+        {
+          "name": "List promotions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/promotions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "promotions"
+              ]
+            },
+            "description": "List promotions."
+          }
+        },
+        {
+          "name": "Get promotion",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/promotions/:promotion",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "promotions",
+                ":promotion"
+              ],
+              "variable": [
+                {
+                  "key": "promotion",
+                  "value": "1",
+                  "description": "promotion route parameter"
+                }
+              ]
+            },
+            "description": "Route points to PromotionController@show, but that method is not implemented. Endpoint is registered but cannot be fully documented or expected to respond successfully."
+          }
+        },
+        {
+          "name": "Create promotion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/promotions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "promotions"
+              ]
+            },
+            "description": "Required: expire_date (date) and discount. No additional type/range validation is defined for discount.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expire_date\": \"2027-12-31\",\n  \"discount\": 15\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update promotion",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/promotions/:promotion",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "promotions",
+                ":promotion"
+              ],
+              "variable": [
+                {
+                  "key": "promotion",
+                  "value": "1",
+                  "description": "promotion route parameter"
+                }
+              ]
+            },
+            "description": "Required: expire_date (date) and discount.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expire_date\": \"2027-12-31\",\n  \"discount\": 15\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete promotion",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/promotions/:promotion",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "promotions",
+                ":promotion"
+              ],
+              "variable": [
+                {
+                  "key": "promotion",
+                  "value": "1",
+                  "description": "promotion route parameter"
+                }
+              ]
+            },
+            "description": "Delete a promotion."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Settings",
+      "description": "Requires Sanctum bearer token and the admin role middleware.",
+      "item": [
+        {
+          "name": "Update settings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings"
+              ]
+            },
+            "description": "Controller expects a settings collection keyed by existing setting keys; there are no validation rules. Values may be scalar data or uploaded files (file values replace settings-images media). Use multipart/form-data and replace the placeholder key with an existing settings key.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "settings[{{setting_key}}]",
+                  "value": "{{setting_value}}",
+                  "type": "text",
+                  "description": "Dynamic key/value; use an existing Setting.key. For image settings, change this form-data entry type to File.",
+                  "disabled": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -7,10 +7,19 @@ use App\Models\Notification;
 use App\Models\Token;
 use App\Traits\SendNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use RuntimeException;
 
 class SendDriverWelcomeNotification implements ShouldQueue
 {
     use SendNotification;
+
+    public int $tries = 5;
+    public bool $afterCommit = true;
+
+    public function backoff(): array
+    {
+        return [10, 30, 60, 120];
+    }
 
     public function handle(UserVerified $event): void
     {
@@ -38,7 +47,10 @@ class SendDriverWelcomeNotification implements ShouldQueue
         ];
 
         foreach (Token::where('user_id', $user->id)->get() as $token) {
-            $this->notifyByFirebase([$token->token], $data, $token->device_type);
+            $result = $this->notifyByFirebase([$token->token], $data, $token->device_type);
+            if (! empty($result['failed'])) {
+                throw new RuntimeException('Failed to send the driver welcome notification.');
+            }
         }
     }
 }

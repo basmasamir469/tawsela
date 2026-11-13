@@ -8,7 +8,7 @@ use App\Mail\VerifyEmail;
 use App\Models\Token;
 use App\Models\User;
 use App\Models\VerificationChallenge;
-use App\Traits\SendSms;
+use App\Jobs\SendSms as SendSmsJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -17,8 +17,6 @@ use Spatie\Permission\Models\Role;
 
 class AuthService
 {
-    use SendSms;
-
     public function __construct(private readonly VerificationChallengeService $challenges)
     {
     }
@@ -56,7 +54,9 @@ class AuthService
             )];
         });
 
-        return $this->sendSms($user->phone, $code)->getStatus() === 0;
+        SendSmsJob::dispatch($user->phone, (string) $code)->afterCommit();
+
+        return true;
     }
 
     public function verifyUser(array $data): ?array

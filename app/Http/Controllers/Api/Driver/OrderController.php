@@ -5,25 +5,20 @@ namespace App\Http\Controllers\Api\Driver;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\drivers\CancelOrderRequest;
 use App\Http\Requests\drivers\RejectOrderRequest;
-use App\Enums\DriverAvailabilityStatus;
-use App\Models\DriveInvoice;
-use App\Models\Notification;
 use App\Models\Order;
-use App\Models\Picker;
-use App\Models\Promotion;
-use App\Models\Token;
-use App\Transformers\DriveInvoiceTransformer;
-use App\Transformers\OrderTransformer;
-use Carbon\Carbon;
-use Vonage\Client ;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Services\Driver\DriverOrderService;
-use Vonage\Client\Credentials\Basic;
+use App\Services\Driver\DriverCallService;
+use App\Services\Driver\DriveInvoiceService;
+use App\Transformers\OrderTransformer;
+use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    public function __construct(protected DriverOrderService $driverOrderService)
+    public function __construct(
+        protected DriverOrderService $driverOrderService,
+        protected DriverCallService $driverCallService,
+        protected DriveInvoiceService $driveInvoiceService
+    )
     {
     }
 
@@ -36,232 +31,77 @@ class OrderController extends Controller
 
     public function pendingOrders()
     {
-        $orders = auth()->user()->pendingOrders();
-        $orders = fractal()
-        ->collection($orders)
-        ->transformWith(new OrderTransformer())
-        ->toArray();
-        return $this->dataResponse($orders,'pending orders',200);     
+        $orders = fractal()->collection($this->driverOrderService->pendingOrders(auth()->user()))->transformWith(new OrderTransformer())->toArray();
 
+        return $this->dataResponse($orders, 'pending orders', 200);
     }
 
     public function acceptOrder($id)
     {
-       $order = Order::findOrFail($id);
-       if (auth()->user()->availability_status !== DriverAvailabilityStatus::AVAILABLE) {
-           return $this->dataResponse(null, __('driver is not available'), 422);
-       }
+        $result = $this->driverOrderService->acceptOrder(auth()->user(), (int) $id);
+        if ($result === 'unavailable') {
+            return $this->dataResponse(null, __('driver is not available'), 422);
+        }
+        if (! $result) {
+            return $this->dataResponse(null, __('this order is not available now'), 422);
+        }
 
-       if($order->order_status == Order::PENDING)
-       {
-        DB::beginTransaction();
-        $order->update([
-          'order_status'=>Order::ACCEPTED,
-          'driver_id'   =>auth()->user()->id,
-        ]);
-        auth()->user()->update(['availability_status' => DriverAvailabilityStatus::BUSY]);
-        $notification = Notification::create([
-            // 'user_id' => $order->user_id,
-            'ar'      =>['title'=>'تم قبول طلبك','description'=>'من فضلك انتظر السائق في الطريق اليك'],
-            'en'      =>['title'=>'your order is accepted','description'=>'please wait the driver is on his way to you ']
-        ]);
-        $notification->users()->attach($order->user_id);
-        DB::commit();
-        $token = Token::where('user_id',$order->user_id)->first();
-        if($token)
-        {
-            $data =
-            [
-               'title'      => $notification->title,
-               'body'       => $notification->description,
-               'action_id'  => $order->id,
-               'action_type'=> 'cancel-order'
-            ];
-           $this->notifyByFirebase([$token->token],$data,$token->device_type);
-           
-       }  
-       return $this->dataResponse(null,__('order is accepted successfully'),200);
-       }
-       return $this->dataResponse(null,__('this order is not available now'),422);
+        return $this->dataResponse(null, __('order is accepted successfully'), 200);
     }
 
     public function show($id)
     {
-        $order = Order::findOrFail($id);
-        $order = fractal($order,new OrderTransformer('order_details'))->toArray();
-        return $this->dataResponse($order,'order_details',200);
+        return $this->dataResponse($this->driverOrderService->orderDetails((int) $id), 'order_details', 200);
     }
 
-    public function cancelOrder(CancelOrderRequest $request,$id)
+    public function cancelOrder(CancelOrderRequest $request, $id)
     {
-        $data  = $request->validated();
-        $order = Order::findOrFail($id);
-        if($order->order_status == Order::ACCEPTED)
-        {
-            $order->update([
-              'order_status'   =>Order::CANCELLED,
-              'cancel_reason'  =>$data['cancel_reason']
-            ]);
-            $order->driver?->update(['availability_status' => DriverAvailabilityStatus::AVAILABLE]);
-            $notification = Notification::create([
-               // 'user_id' => $order->user_id,
-                'ar'      =>['title'=>' تم الغاء طلبك','description'=>' ناسف لابلاغك انه تم الغاء طلبك '],
-                'en'      =>['title'=>' your order is cancelled','description'=>'we are sorry to inform you that you order is cancelled for ']
-            ]);
-            $notification->users()->attach($order->user_id);
-            $token = Token::where('user_id',$order->user_id)->first();
-            if($token)
-            {
-                $data =
-                [
-                   'title'      => $notification->title,
-                   'body'       => $notification->description,
-                   'action_id'  => $order->id,
-                   'action_type'=> 'cancel-order'
-                ];
-              $this->notifyByFirebase([$token->token],$data,$token->device_type);
-            }
-        
-            return $this->dataResponse(null,__('order is cancelled successfully'),200);
-    
+        if (! $this->driverOrderService->cancelOrder((int) $id, $request->validated())) {
+            return $this->dataResponse(null, __('this order cannot be cancelled'), 422);
         }
+
+        return $this->dataResponse(null, __('order is cancelled successfully'), 200);
     }
 
     public function startDrive($id)
     {
-        $order = Order::findOrFail($id);
-        if($order->order_status == Order::ACCEPTED)
-        {
-            $order->update([
-              'order_status'=>Order::STARTED,
-              'start_time'  => Carbon::now()
-            ]);
-        
-            return $this->dataResponse(null,__('drive is started'),200);
-    
-        }
-            return $this->dataResponse(null,__('drive cannot be started'),422);
+        $started = $this->driverOrderService->startDrive((int) $id);
+
+        return $this->dataResponse(null, $started ? __('drive is started') : __('drive cannot be started'), $started ? 200 : 422);
     }
 
-
-    public function finishDrive(Request $request,$id)
+    public function finishDrive(Request $request, $id)
     {
-        $order = Order::findOrFail($id);
-        if($order->order_status == Order::STARTED)
-        {   
-            $waiting_price = $request->waiting_price ? $request->waiting_price : 0;
-            $total_cost = $order->price_after_discount? ($order->price_after_discount + $waiting_price): ($order->price + $waiting_price);
-            $vat = ($total_cost * $order->vat )/100;
-            $total_cost += $vat;
+        $finished = $this->driverOrderService->finishDrive((int) $id, (float) ($request->input('waiting_price') ?: 0));
 
-            DB::beginTransaction();
-
-            $order->update([
-              'order_status' =>Order::FINISHED,
-              'waiting_price'=>$waiting_price,
-              'total_cost'   => $total_cost,
-              'end_time'     => Carbon::now(),
-            ]);
-            $order->driveInvoice()->create([
-             'price'         => $order->price_after_discount?? $order->price,
-             'taxes'         => $vat,
-             'total_cost'    => $total_cost,
-             'waiting_time'  => $waiting_price,
-             'driver_id'     => $order->driver_id,
-             'user_id'       => $order->user_id
-            ]);
-            $driver = $order->driver;
-            $driver->debit += $vat;
-            $driver->save();
-
-            DB::commit();
-            return $this->dataResponse(null,__('drive is finished'),200);
-    
-        }
-            return $this->dataResponse(null,__('drive cannot be finished'),422);
+        return $this->dataResponse(null, $finished ? __('drive is finished') : __('drive cannot be finished'), $finished ? 200 : 422);
     }
 
     public function showDriveInvoice($id)
     {
-        $drive_invoice = Order::findOrFail($id)->driveInvoice;
-        $drive_invoice = fractal($drive_invoice,new DriveInvoiceTransformer())->toArray();
-        return $this->dataResponse($drive_invoice,__('drive invoice'),200);
+        $invoice = $this->driveInvoiceService->details((int) $id);
+
+        return $this->dataResponse($invoice, __('drive invoice'), 200);
     }
 
     public function completeDrive($id)
     {
-        $order = Order::findOrFail($id);
-        if($order->order_status == Order::FINISHED)
-        {
-            $order->update([
-              'order_status'=>Order::COMPLETED,
-            ]);
-            $order->driver?->update(['availability_status' => DriverAvailabilityStatus::AVAILABLE]);
-        
-            return $this->dataResponse(null,__('drive is completed successfully'),200);
-    
-        }
-            return $this->dataResponse(null,__('drive cannot be completed'),422);
-    }
+        $completed = $this->driverOrderService->completeDrive((int) $id);
 
+        return $this->dataResponse(null, $completed ? __('drive is completed successfully') : __('drive cannot be completed'), $completed ? 200 : 422);
+    }
 
     public function call($order_id)
     {
-        $order = Order::findOrFail($order_id);
-        $user_phone   = '+2'.$order->user->phone;
-        $driver_phone = '+2'.auth()->user()->phone;
-        $keypair = new \Vonage\Client\Credentials\Keypair(
-            file_get_contents('private.key'),
-            env('VONAGE_APPLICATION_ID')
-        );
-        $client = new Client($keypair);
-        $outboundCall = new \Vonage\Voice\OutboundCall(
-            new \Vonage\Voice\Endpoint\Phone($user_phone),
-            new \Vonage\Voice\Endpoint\Phone($driver_phone)
-        );
-        $outboundCall->setAnswerWebhook(
-            new \Vonage\Voice\Webhook(
-                'https://raw.githubusercontent.com/nexmo-community/ncco-examples/gh-pages/text-to-speech.json',
-                \Vonage\Voice\Webhook::METHOD_GET
-            )
-        );
-        $response = $client->voice()->createOutboundCall($outboundCall);
-        
-        var_dump($response);
+        $this->driverCallService->callCustomer((int) $order_id, auth()->user());
     }
 
     public function arrived($id)
     {
-       $order = Order::findOrFail($id);
-       if($order->order_status == Order::ACCEPTED)
-       {
-        DB::beginTransaction();
-        $order->update([
-            'order_status'=> Order::ARRIVED
-           ]);
+        if (! $this->driverOrderService->markArrived((int) $id)) {
+            return $this->dataResponse(null, __('drive cannot be marked as arrived'), 422);
+        }
 
-           $notification = Notification::create([
-            // 'user_id' => $order->user_id,
-            'ar'      =>['title'=>'وصل السائق الخاص بك','description'=>'من فضلك عليك ان تكون هناك في غضون خمس دقائق'],
-            'en'      =>['title'=>'your driver has arrived now','description'=>'please you should be there in five minutes ']
-        ]);
-        $notification->users()->attach($order->user_id);
-        DB::commit();
-        $token = Token::where('user_id',$order->user_id)->first();
-        if($token)
-        {
-            $data =
-            [
-               'title'      => $notification->title,
-               'body'       => $notification->description,
-               'action_id'  => $order->id,
-               'action_type'=> 'arrived'
-            ];
-           $this->notifyByFirebase([$token->token],$data,$token->device_type);
-           
-       }  
-       return $this->dataResponse(null,__('arrived successfully'),200);     
-       }
-
+        return $this->dataResponse(null, __('arrived successfully'), 200);
     }
 }
