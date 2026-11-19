@@ -10,7 +10,7 @@ jobs:
      runs-on: ubuntu-latest
      steps:
        - name: print a welcome message
-         run: echo"welcome from our first github actions workflow"
+         run: echo "welcome from our first github actions workflow"
 
        - name: checkout repository
          uses: actions/checkout@v4.4.0
