@@ -1,0 +1,18 @@
+name: first work flow
+
+on:
+ push:
+  branches:
+      - main
+
+jobs:
+  example-job:
+     runs-on: ubuntu-latest
+     steps:
+       - name: print a welcome message
+         run: echo"welcome from our first github actions workflow"
+
+       - name: checkout repository
+         uses: actions/checkout@v4.4.0
+  
+ 
