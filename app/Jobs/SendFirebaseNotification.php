@@ -16,7 +16,6 @@ class SendFirebaseNotification implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, SendNotification;
 
     public int $tries = 5;
-    public bool $afterCommit = true;
 
     public function __construct(
         public int|array $userIds,

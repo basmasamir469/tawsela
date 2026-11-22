@@ -15,7 +15,6 @@ class SendVerificationEmail implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 5;
-    public bool $afterCommit = true;
 
     public function __construct(public string $recipient, public string $code)
     {

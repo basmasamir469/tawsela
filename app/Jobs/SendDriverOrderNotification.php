@@ -22,7 +22,6 @@ class SendDriverOrderNotification implements ShouldQueue, ShouldBeUnique
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, SendNotification;
 
     public int $tries = 5;
-    public bool $afterCommit = true;
     public int $uniqueFor = 3600;
 
     public function __construct(public int $orderId, public int $driverId)

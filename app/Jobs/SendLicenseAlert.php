@@ -21,7 +21,6 @@ class SendLicenseAlert implements ShouldQueue
      */
     public $drivers_ids;
     public int $tries = 5;
-    public bool $afterCommit = true;
 
     public function backoff(): array
     {

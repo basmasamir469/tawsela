@@ -1,21 +1,55 @@
-name: first work flow
+name: Tests
 
 on:
- push:
-  branches:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
       - main
 
 jobs:
-  example-job:
-     runs-on: ubuntu-latest
-     steps:
-       - name: print a welcome message
-         run: echo "welcome from our first github actions workflow"
+  tests:
+    runs-on: ubuntu-latest
 
-       - name: checkout repository
-         uses: actions/checkout@v4.4.0
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: tawsela_test
+          MYSQL_USER: tawsela
+          MYSQL_PASSWORD: tawsela
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+          --health-start-period=20s
 
-       - name: list repository files
-         run: ls -la
-  
- 
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build application Docker image
+        run: docker build --tag tawsela-tests .
+
+      - name: Run tests in Docker container
+        run: >-
+          docker run --rm --network host
+          -e APP_ENV=testing
+          -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          -e DB_CONNECTION=mysql
+          -e DB_HOST=127.0.0.1
+          -e DB_PORT=3306
+          -e DB_DATABASE=tawsela_test
+          -e DB_USERNAME=tawsela
+          -e DB_PASSWORD=tawsela
+          -e CACHE_DRIVER=array
+          -e SESSION_DRIVER=array
+          -e QUEUE_CONNECTION=sync
+          -e MAIL_MAILER=array
+          -e TELESCOPE_ENABLED=false
+          tawsela-tests php artisan test

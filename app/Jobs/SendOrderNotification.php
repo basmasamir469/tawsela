@@ -14,7 +14,6 @@ class SendOrderNotification implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 5;
-    public bool $afterCommit = true;
 
     public function backoff(): array
     {

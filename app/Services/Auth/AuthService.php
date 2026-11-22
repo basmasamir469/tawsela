@@ -153,7 +153,8 @@ class AuthService
                 $user,
                 VerificationChallenge::PURPOSE_PASSWORD_RESET,
                 $data['value'],
-                $data['code']
+                $data['code'],
+                $data['type']
             )) {
                 return false;
             }

@@ -34,7 +34,11 @@ class AuthServiceCycleTest extends TestCase
             'phone' => '966500000001',
             'device_id' => 'device-001',
             'device_type' => 'android',
-            'image' => UploadedFile::fake()->image('avatar.jpg'),
+            'image' =>  UploadedFile::fake()->create(
+                         'avatar.jpg',
+                         100,
+                         'image/jpeg'
+                      ),
         ];
 
         $this->assertTrue($service->register($payload, 'user'));
@@ -50,6 +54,8 @@ class AuthServiceCycleTest extends TestCase
             'value' => $payload['phone'],
             'code' => '123456',
         ]);
+
+        info('Verification result: ', ['result' => $result]);
 
         $this->assertNotNull($result);
         $this->assertTrue($result['user']->is_active_phone);
