@@ -49,7 +49,7 @@ class OrderService implements \App\Services\Order\Contracts\OrderCancellation
 
     public function makeOrder(User $user, array $data): Order
     {
-        $priceAfterDiscount = $data['price'];
+        $priceAfterDiscount = 0;
         $promotion = null;
 
         if (! empty($data['promo_code'])) {
